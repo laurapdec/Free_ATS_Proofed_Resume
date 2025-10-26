@@ -252,6 +252,22 @@ npm run preview
 - [ ] PDF export functionality
 - [ ] Resume customization editor
 - [ ] Skills matching with job descriptions
+- [ ] Rate limiting for API endpoints (recommended for production)
+- [ ] Input validation and sanitization
+- [ ] Enhanced error handling and logging
+- [ ] Unit and integration tests
+
+## Security Considerations
+
+This is an initial implementation for development purposes. Before deploying to production, consider:
+
+- **Rate Limiting**: Implement rate limiting on API endpoints to prevent abuse and DoS attacks (e.g., using `express-rate-limit`)
+- **Input Validation**: Add validation middleware to sanitize user inputs
+- **HTTPS**: Use HTTPS in production (required for OAuth)
+- **Environment Variables**: Never commit `.env` files with real credentials
+- **Session Security**: Use secure session storage (e.g., Redis) in production
+- **Database Security**: Use authentication for MongoDB and restrict network access
+- **CORS**: Configure CORS to only allow specific origins in production
 
 ## Contributing
 
