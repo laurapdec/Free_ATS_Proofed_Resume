@@ -108,3 +108,4 @@ temp/
 
 ### Security note
 # Never commit secrets. Use .env.example files for placeholders and store real secrets in your deployment provider (Vercel / Render / GitHub Secrets / Supabase/Neon).
+.env
