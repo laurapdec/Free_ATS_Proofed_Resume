@@ -12,8 +12,11 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://atsproofedcv.com/api/$1"
+      "src": "/api/v1/linkedin/(.*)",
+      "dest": "https://atsproofedcv.com/api/v1/linkedin/$1"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",

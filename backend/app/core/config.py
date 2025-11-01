@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # LinkedIn OAuth
     LINKEDIN_CLIENT_ID: str
     LINKEDIN_CLIENT_SECRET: str
-    LINKEDIN_REDIRECT_URI: str = "https://atsproofedcv.com/api/auth/linkedin/callback"
+    LINKEDIN_REDIRECT_URI: str = "https://atsproofedcv.com/api/v1/linkedin/callback"
     
     # Database
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/ats_resume"
