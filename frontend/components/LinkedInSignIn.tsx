@@ -34,7 +34,8 @@ export const LinkedInSignIn = ({ onProfileLoaded }: LinkedInSignInProps) => {
     sessionStorage.setItem('redirect_after_auth', '/editor');
     
     // Use backend auth endpoint to initiate OAuth flow
-    window.location.href = '/api/v1/linkedin/auth';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    window.location.href = `${apiUrl}/api/v1/linkedin/auth`;
   }, []);
 
   return (

@@ -9,18 +9,5 @@
       "src": "frontend/package.json",
       "use": "@vercel/next"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/v1/linkedin/(.*)",
-      "dest": "https://atsproofedcv.com/api/v1/linkedin/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/$1"
-    }
   ]
 }

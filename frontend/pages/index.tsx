@@ -22,7 +22,13 @@ export default function HomePage() {
         </Heading>
         
         <Text fontSize="xl" color="gray.600" textAlign="center" maxW="2xl">
-          In seconds. For Free. Transform your LinkedIn profile into a professional, ATS-friendly resume that helps you stand out and get more interviews. No watermarks, no credit card, no hassle.
+          In seconds. For Free. 
+        </Text>
+        <Text fontSize="xl" color="gray.600" textAlign="center" maxW="2xl">
+          Transform your LinkedIn profile into a professional, ATS-friendly resume that helps you stand out and get more interviews.
+        </Text>
+        <Text fontSize="xl" color="gray.600" textAlign="center" maxW="2xl">
+          No watermarks, no credit card, no hassle.
         </Text>
 
         <Box py={8}>
