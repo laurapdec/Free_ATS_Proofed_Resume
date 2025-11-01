@@ -1,13 +1,12 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": false,
+  "buildCommand": null,
+  "installCommand": null,
   "outputDirectory": ".next",
-  "installCommand": false,
-  "public": true,
   "builds": [
     {
-      "src": "frontend/next.config.js",
+      "src": "frontend/package.json",
       "use": "@vercel/next"
     }
   ]
