@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    CORS_ORIGINS: str = "https://free-ats-proofed-cv.vercel.app,http://localhost:3000"
+    BACKEND_CORS_ORIGINS: str = "https://free-ats-proofed-cv.vercel.app,http://localhost:3000"
     
     # Frontend URL (default to production, override in env)
     FRONTEND_URL: str = "https://free-ats-proofed-cv.vercel.app"

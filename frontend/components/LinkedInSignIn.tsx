@@ -32,8 +32,8 @@ export const LinkedInSignIn = ({ onProfileLoaded }: LinkedInSignInProps) => {
   const handleSignIn = useCallback(() => {
     // LinkedIn OAuth configuration
     const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID;
-    const redirectUri = encodeURIComponent(process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI || 'http://localhost:8000/api/v1/linkedin/callback');
-    const scope = encodeURIComponent('r_liteprofile r_emailaddress w_member_social');
+    const redirectUri = encodeURIComponent(process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI || `${process.env.NEXT_PUBLIC_API_URL}/api/v1/linkedin/callback`);
+    const scope = encodeURIComponent('r_liteprofile r_emailaddress');
     const state = Math.random().toString(36).substring(7);
     
     // Store state for validation
