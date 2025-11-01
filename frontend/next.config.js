@@ -16,7 +16,9 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
-  swcMinify: true
+  swcMinify: true,
+  distDir: '.next',
+  output: 'standalone'
 }
 
 module.exports = nextConfig
