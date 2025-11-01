@@ -30,30 +30,11 @@ export const LinkedInSignIn = ({ onProfileLoaded }: LinkedInSignInProps) => {
   }, [toast]);
 
   const handleSignIn = useCallback(() => {
-    // LinkedIn OAuth configuration
-    const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID;
-    const redirectUri = encodeURIComponent(process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI || `${process.env.NEXT_PUBLIC_API_URL}/api/v1/linkedin/callback`);
-    const scope = encodeURIComponent('r_liteprofile r_emailaddress');
-    const state = Math.random().toString(36).substring(7);
-    
-    // Store state for validation
-    sessionStorage.setItem('linkedin_oauth_state', state);
-    
     // Store redirect preference
     sessionStorage.setItem('redirect_after_auth', '/editor');
     
-    // Debug log
-    console.log('LinkedIn OAuth Config:', {
-      clientId,
-      redirectUri: decodeURIComponent(redirectUri),
-      scope: decodeURIComponent(scope)
-    });
-
-    // Construct LinkedIn OAuth URL
-    const linkedInAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=${scope}`;
-    
-    // Redirect to LinkedIn
-    window.location.href = linkedInAuthUrl;
+    // Use backend auth endpoint to initiate OAuth flow
+    window.location.href = '/api/v1/linkedin/auth';
   }, []);
 
   return (

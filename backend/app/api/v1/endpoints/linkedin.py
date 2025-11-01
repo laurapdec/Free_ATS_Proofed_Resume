@@ -28,12 +28,21 @@ async def linkedin_auth():
 
 from fastapi.responses import RedirectResponse
 
+from pydantic import BaseModel
+from typing import Optional
+
+class LinkedInCallback(BaseModel):
+    code: str
+    state: str
+    error: Optional[str] = None
+    error_description: Optional[str] = None
+
 @router.get("/callback", summary="Handle LinkedIn OAuth callback")
 async def linkedin_callback(
     code: str, 
     state: str,
-    error: str = None,
-    error_description: str = None
+    error: Optional[str] = None,
+    error_description: Optional[str] = None
 ):
     """Handle the OAuth callback from LinkedIn."""
     # Check for OAuth errors

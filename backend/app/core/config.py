@@ -12,15 +12,15 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    BACKEND_CORS_ORIGINS: str = "https://free-ats-proofed-cv.vercel.app,http://localhost:3000"
+    BACKEND_CORS_ORIGINS: str = "https://atsproofedcv.com,https://www.atsproofedcv.com"
     
     # Frontend URL (default to production, override in env)
-    FRONTEND_URL: str = "https://free-ats-proofed-cv.vercel.app"
+    FRONTEND_URL: str = "https://atsproofedcv.com"
     
     # LinkedIn OAuth
     LINKEDIN_CLIENT_ID: str
     LINKEDIN_CLIENT_SECRET: str
-    LINKEDIN_REDIRECT_URI: str = "https://free-ats-proofed-cv.vercel.app/api/auth/linkedin/callback"
+    LINKEDIN_REDIRECT_URI: str = "https://free-ats-proofed-resume.vercel.app/api/v1/linkedin/callback"
     
     # Database
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/ats_resume"

@@ -18,11 +18,11 @@ export default function HomePage() {
     <Container maxW="container.xl" py={16}>
       <VStack spacing={8} align="center">
         <Heading as="h1" size="2xl" textAlign="center">
-          Create Your ATS-Optimized Resume
+          Create your ATS Proofed CV
         </Heading>
         
         <Text fontSize="xl" color="gray.600" textAlign="center" maxW="2xl">
-          Transform your LinkedIn profile into a professional, ATS-friendly resume that helps you stand out and get more interviews.
+          In seconds. For Free. Transform your LinkedIn profile into a professional, ATS-friendly resume that helps you stand out and get more interviews. No watermarks, no credit card, no hassle.
         </Text>
 
         <Box py={8}>
