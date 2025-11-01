@@ -7,14 +7,10 @@ const nextConfig = {
   },
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const baseUrl = apiUrl.startsWith('http://') || apiUrl.startsWith('https://')
-      ? apiUrl
-      : `http://${apiUrl}`;
-    
     return [
       {
         source: '/api/:path*',
-        destination: `${baseUrl}/api/:path*`
+        destination: `${apiUrl}/:path*` // This will route to the correct backend path
       }
     ];
   }
