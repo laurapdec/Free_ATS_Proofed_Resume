@@ -10,7 +10,13 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   swcMinify: true,
   distDir: '.next',
-  output: 'standalone'
+  output: 'standalone',
+  typescript: {
+    ignoreBuildErrors: false
+  },
+  eslint: {
+    ignoreDuringBuilds: false
+  }
 }
 
 module.exports = nextConfig
