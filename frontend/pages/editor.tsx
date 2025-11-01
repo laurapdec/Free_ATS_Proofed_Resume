@@ -1,12 +1,12 @@
 import { Box, Container, VStack, useToast } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import { ContactSection } from '../components/ContactSection';
-import { ExperienceSection } from '../components/ExperienceSection';
-import { EducationSection } from '../components/EducationSection';
-import { PublicationSection } from '../components/PublicationSection';
-import { SkillsSection } from '../components/SkillsSection';
-import { LanguageSection } from '../components/LanguageSection';
-import type { Resume } from '../types/resume';
+import { ContactSection } from '../src/components/ContactSection';
+import { ExperienceSection } from '../src/components/ExperienceSection';
+import { EducationSection } from '../src/components/EducationSection';
+import { PublicationSection } from '../src/components/PublicationSection';
+import { SkillsSection } from '../src/components/SkillsSection';
+import { LanguageSection } from '../src/components/LanguageSection';
+import type { Resume, Experience, Education, Publication, Skill, Language } from '../types/resume';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/router';
 
@@ -39,9 +39,23 @@ export default function ResumeEditor() {
     }));
   };
 
-  const createUpdateHandler = <T extends { id: string }>(
-    section: keyof Resume,
-    field: keyof T,
+  type ResumeSection = Experience | Education | Publication | Skill | Language;
+  type ResumeSectionKey = Extract<keyof Resume, 'experiences' | 'education' | 'publications' | 'skills' | 'languages'>;
+  type SectionToType = {
+    experiences: Experience;
+    education: Education;
+    publications: Publication;
+    skills: Skill;
+    languages: Language;
+  };
+  
+  const createUpdateHandler = <
+    K extends ResumeSectionKey,
+    T extends SectionToType[K],
+    F extends keyof T
+  >(
+    section: K,
+    field: F
   ) => (id: string, value: string) => {
     setResume((prev) => ({
       ...prev,
@@ -52,9 +66,12 @@ export default function ResumeEditor() {
   };
 
   // Add handlers
-  const createAddHandler = <T extends { id: string }>(
-    section: keyof Resume,
-    template: Omit<T, 'id'>,
+  const createAddHandler = <
+    K extends ResumeSectionKey,
+    T extends SectionToType[K]
+  >(
+    section: K,
+    template: Omit<T, 'id'>
   ) => () => {
     setResume((prev) => ({
       ...prev,
