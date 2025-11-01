@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+    NEXT_PUBLIC_LINKEDIN_CLIENT_ID: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID,
+  },
   async rewrites() {
-    // Ensure we always have a valid API URL that starts with http:// or https://
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     const baseUrl = apiUrl.startsWith('http://') || apiUrl.startsWith('https://')
       ? apiUrl
