@@ -41,7 +41,7 @@ export const LinkedInSignIn = ({ onProfileLoaded }: LinkedInSignInProps) => {
     
     // Build LinkedIn authorization URL
     const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI;;
+    const redirectUri = 'https://atsproofedcv.com/api/v1/linkedin/callback';
     const scope = 'r_liteprofile r_emailaddress w_member_social';
     
     const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization');

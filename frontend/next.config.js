@@ -8,15 +8,8 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
-  swcMinify: true,
   distDir: '.next',
-  output: 'standalone',
-  typescript: {
-    ignoreBuildErrors: false
-  },
-  eslint: {
-    ignoreDuringBuilds: false
-  }
+  output: 'standalone'
 }
 
 module.exports = nextConfig
