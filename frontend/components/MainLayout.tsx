@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { LinkedInSignIn } from './LinkedInSignIn';
 import { ScanCVButton } from './ScanCVButton';
 import { CoverLetterModal } from './CoverLetterModal';
+import PDFViewer from './PDFViewer';
 import type { Resume } from '../types/resume';
 import { isValidResume } from '../utils/validation';
 
@@ -111,6 +112,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
   const [hasInitialPrompt, setHasInitialPrompt] = useState(false);
   const [splitPosition, setSplitPosition] = useState(50); // percentage
+  const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
   const bgColor = useColorModeValue('gray.50', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
@@ -158,6 +160,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
               onProfileLoaded={(resume) => {
                 if (isValidResume(resume)) {
                   setResumes([resume]);
+                  // TODO: Generate PDF from resume data and set the URL
+                  setCurrentPdfUrl('/temp-preview.pdf');
                 }
               }}
             />
@@ -166,6 +170,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
               onProfileLoaded={(resume) => {
                 if (isValidResume(resume)) {
                   setResumes([resume]);
+                  // TODO: Generate PDF from resume data and set the URL
+                  setCurrentPdfUrl('/temp-preview.pdf');
                 }
               }}
             />
@@ -452,38 +458,84 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
             >
               {resumes.length > 0 && (
                 <>
-                  <Box p={4}>
-                    <Text fontSize="lg" fontWeight="bold" mb={2}>Resume Preview</Text>
-                    {/* Add PDF viewer here */}
-                    <Box
-                      h="full"
-                      bg={useColorModeValue('white', 'gray.700')}
-                      borderRadius="md"
-                      p={4}
-                    >
-                      PDF Viewer will go here
+                  <Box p={0} h="full">
+                    <Box h="calc(100% )">
+                      {currentPdfUrl ? (
+                        <PDFViewer file={currentPdfUrl} />
+                      ) : (
+                        <Flex
+                          h="full"
+                          alignItems="center"
+                          justifyContent="center"
+                          bg={useColorModeValue('white', 'gray.700')}
+                          borderRadius="md"
+                          p={4}
+                          borderWidth="2px"
+                          borderStyle="dashed"
+                          borderColor={borderColor}
+                        >
+                          <Text color="gray.500">
+                            Your resume preview will appear here
+                          </Text>
+                        </Flex>
+                      )}
                     </Box>
                   </Box>
                 </>
               )}
             </Box>
 
-            {/* Chat area */}
-            <Box flex="1" overflowY="auto" p={4}>
-              {resumes.length > 0 && !hasInitialPrompt && (
-                <Box 
-                  p={4} 
-                  bg={useColorModeValue('blue.50', 'blue.900')} 
-                  borderRadius="lg"
-                  mb={4}
-                >
-                  <Text fontWeight="medium" color={useColorModeValue('blue.600', 'blue.200')}>
-                    I'm analyzing your resume... This will just take a moment.
-                  </Text>
-                </Box>
-              )}
-              {children}
-            </Box>
+            {/* Chat area with input */}
+            <Flex 
+              direction="column"
+              w={resumes.length ? `${100 - splitPosition}%` : "100%"}
+              transition="width 0.2s"
+            >
+              {/* Chat messages */}
+              <Box 
+                flex="1" 
+                overflowY="auto" 
+                p={4}
+              >
+                {resumes.length > 0 && !hasInitialPrompt && (
+                  <Box 
+                    p={4} 
+                    bg={useColorModeValue('blue.50', 'blue.900')} 
+                    borderRadius="lg"
+                    mb={4}
+                  >
+                    <Text fontWeight="medium" color={useColorModeValue('blue.600', 'blue.200')}>
+                      I'm analyzing your resume... This will just take a moment.
+                    </Text>
+                  </Box>
+                )}
+                {children}
+              </Box>
+
+              {/* Job description input area */}
+              <Box p={4} borderTop="1px" borderColor={borderColor} bg={bgColor}>
+                <Flex gap={2}>
+                  <IconButton
+                    aria-label="Attach file"
+                    icon={<AttachmentIcon />}
+                    size="lg"
+                    variant="ghost"
+                  />
+                  <Input
+                    flex="1"
+                    placeholder="Paste the job description"
+                    size="lg"
+                    variant="filled"
+                  />
+                  <IconButton
+                    aria-label="Send"
+                    icon={<ArrowForwardIcon />}
+                    size="lg"
+                    colorScheme="blue"
+                  />
+                </Flex>
+              </Box>
+            </Flex>
 
             {/* Resizer */}
             {resumes.length > 0 && (
@@ -502,30 +554,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 userSelect="none"
               />
             )}
-          </Box>
-
-          {/* Job description input area */}
-          <Box p={4} borderTop="1px" borderColor={borderColor} bg={bgColor}>
-            <Flex gap={2}>
-              <IconButton
-                aria-label="Attach file"
-                icon={<AttachmentIcon />}
-                size="lg"
-                variant="ghost"
-              />
-              <Input
-                flex="1"
-                placeholder="Paste the job description"
-                size="lg"
-                variant="filled"
-              />
-              <IconButton
-                aria-label="Send"
-                icon={<ArrowForwardIcon />}
-                size="lg"
-                colorScheme="blue"
-              />
-            </Flex>
           </Box>
         </Flex>
       </Flex>

@@ -53,6 +53,13 @@ export interface Language {
   proficiency: 'Elementary' | 'Limited Working' | 'Professional Working' | 'Full Professional' | 'Native/Bilingual';
 }
 
+export interface ResumeFile {
+  url: string;
+  name: string;
+  lastModified: string;
+  status: 'generating' | 'ready' | 'error';
+}
+
 export interface Resume {
   contactInfo: ContactInfo;
   experiences: Experience[];
@@ -60,4 +67,5 @@ export interface Resume {
   publications: Publication[];
   skills: Skill[];
   languages: Language[];
+  pdfFile?: ResumeFile;
 }
