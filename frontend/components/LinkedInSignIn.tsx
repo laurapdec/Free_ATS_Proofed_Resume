@@ -33,10 +33,26 @@ export const LinkedInSignIn = ({ onProfileLoaded }: LinkedInSignInProps) => {
     // Store redirect preference
     sessionStorage.setItem('redirect_after_auth', '/editor');
     
-    // Use backend auth endpoint to initiate OAuth flow
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    console.log('LinkedIn auth apiUrl:', apiUrl);
-    window.location.href = `${apiUrl}/api/v1/linkedin/auth`;
+    // Generate state parameter for CSRF protection
+    const state = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    sessionStorage.setItem('linkedin_oauth_state', state);
+    
+    // Build LinkedIn authorization URL
+    const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/api/auth/linkedin/callback`;
+    const scope = 'r_liteprofile r_emailaddress w_member_social';
+    
+    const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization');
+    authUrl.searchParams.append('response_type', 'code');
+    authUrl.searchParams.append('client_id', clientId || '');
+    authUrl.searchParams.append('redirect_uri', redirectUri);
+    authUrl.searchParams.append('state', state);
+    authUrl.searchParams.append('scope', scope);
+    
+    // Redirect to LinkedIn's authorization page
+    window.location.href = authUrl.toString();
   }, []);
 
   return (
