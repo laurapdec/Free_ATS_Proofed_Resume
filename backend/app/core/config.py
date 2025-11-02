@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # LinkedIn OAuth
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
-    linkedin_redirect_uri: str = "http://localhost:3000/api/v1/linkedin/callback"
+    linkedin_redirect_uri: str = "http://127.0.0.1:8001/api/v1/linkedin/callback"
     
     # Database
     database_url: str = "postgresql://user:password@localhost:5432/ats_resume"

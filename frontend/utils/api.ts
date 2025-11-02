@@ -6,9 +6,8 @@ export async function generatePDF(resumeData: any): Promise<string> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        'Accept': '*/*',
       },
-      credentials: 'include',
       mode: 'cors',
       body: JSON.stringify(resumeData),
     });
