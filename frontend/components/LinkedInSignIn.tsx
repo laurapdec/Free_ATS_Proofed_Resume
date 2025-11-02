@@ -35,6 +35,7 @@ export const LinkedInSignIn = ({ onProfileLoaded }: LinkedInSignInProps) => {
     
     // Use backend auth endpoint to initiate OAuth flow
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    console.log('LinkedIn auth apiUrl:', apiUrl);
     window.location.href = `${apiUrl}/api/v1/linkedin/auth`;
   }, []);
 
