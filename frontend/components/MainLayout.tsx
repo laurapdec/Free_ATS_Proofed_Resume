@@ -7,6 +7,7 @@ import { CoverLetterModal } from './CoverLetterModal';
 import PDFViewer from './PDFViewer';
 import type { Resume } from '../types/resume';
 import { isValidResume } from '../utils/validation';
+import { generatePDF } from '../utils/api';
 
 interface MainLayoutProps {
   children?: React.ReactNode;
@@ -23,10 +24,14 @@ const DonutChart: React.FC<DonutChartProps> = ({ percentage, size = 60, strokeWi
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
   
+  const greenColor = useColorModeValue('#48BB78', '#68D391'); // green.500, green.300
+  const blueColor = useColorModeValue('#4299E1', '#63B3ED'); // blue.500, blue.300
+  const orangeColor = useColorModeValue('#ED8936', '#F6AD55'); // orange.500, orange.300
+  
   const getColor = (score: number) => {
-    if (score >= 90) return useColorModeValue('#48BB78', '#68D391'); // green.500, green.300
-    if (score >= 75) return useColorModeValue('#4299E1', '#63B3ED'); // blue.500, blue.300
-    return useColorModeValue('#ED8936', '#F6AD55'); // orange.500, orange.300
+    if (score >= 90) return greenColor;
+    if (score >= 75) return blueColor;
+    return orangeColor;
   };
 
   return (
@@ -157,21 +162,31 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
           <VStack spacing={4} w="full">
             <Text fontWeight="semibold">Import Resume</Text>
             <LinkedInSignIn
-              onProfileLoaded={(resume) => {
+              onProfileLoaded={async (resume) => {
                 if (isValidResume(resume)) {
                   setResumes([resume]);
-                  // TODO: Generate PDF from resume data and set the URL
-                  setCurrentPdfUrl('/temp-preview.pdf');
+                  try {
+                    const url = await generatePDF(resume);
+                    setCurrentPdfUrl(url);
+                  } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    // You might want to show an error toast here
+                  }
                 }
               }}
             />
             <Text>or</Text>
             <ScanCVButton
-              onProfileLoaded={(resume) => {
+              onProfileLoaded={async (resume) => {
                 if (isValidResume(resume)) {
                   setResumes([resume]);
-                  // TODO: Generate PDF from resume data and set the URL
-                  setCurrentPdfUrl('/temp-preview.pdf');
+                  try {
+                    const url = await generatePDF(resume);
+                    setCurrentPdfUrl(url);
+                  } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    // You might want to show an error toast here
+                  }
                 }
               }}
             />

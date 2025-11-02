@@ -4,34 +4,41 @@ import secrets
 
 class Settings(BaseSettings):
     # API
-    API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    api_v1_str: str = "/api/v1"
+    secret_key: str = secrets.token_urlsafe(32)
     
     # Authentication
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
     
     # CORS
-    BACKEND_CORS_ORIGINS: str = "https://atsproofedcv.com,https://www.atsproofedcv.com"
+    backend_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.233:3000,http://localhost:8001,http://127.0.0.1:8001,http://192.168.1.233:8001"
     
     # Frontend URL (default to production, override in env)
-    FRONTEND_URL: str = "https://atsproofedcv.com"
+    frontend_url: str = "http://localhost:3000"
     
     # LinkedIn OAuth
-    LINKEDIN_CLIENT_ID: str
-    LINKEDIN_CLIENT_SECRET: str
-    LINKEDIN_REDIRECT_URI: str = "https://atsproofedcv.com/api/v1/linkedin/callback"
+    linkedin_client_id: str = ""
+    linkedin_client_secret: str = ""
+    linkedin_redirect_uri: str = "http://localhost:3000/api/v1/linkedin/callback"
     
     # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost:5432/ats_resume"
+    database_url: str = "postgresql://user:password@localhost:5432/ats_resume"
     
-    class Config:
-        env_file = ".env"
+    # Extra settings from environment
+    debug: bool = False
+    allowed_hosts: str = "localhost,127.0.0.1"
+    
+    model_config = {
+        'env_file': '.env',
+        'case_sensitive': False,
+        'extra': 'allow'
+    }
         
     def get_cors_origins(self) -> List[str]:
         """Get the CORS origins as a list."""
-        if isinstance(self.BACKEND_CORS_ORIGINS, str):
-            return [i.strip() for i in self.BACKEND_CORS_ORIGINS.split(",")]
-        return self.BACKEND_CORS_ORIGINS
+        if isinstance(self.backend_cors_origins, str):
+            return [i.strip() for i in self.backend_cors_origins.split(",")]
+        return self.backend_cors_origins
 
 settings = Settings()

@@ -4,7 +4,7 @@ import { Box, IconButton, Flex, Text, useColorModeValue } from '@chakra-ui/react
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
 // Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs/pdf.worker.min.js`;
 
 interface PDFViewerComponentProps {
   file: string;
