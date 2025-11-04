@@ -18,9 +18,10 @@ interface CoverLetterModalProps {
   isOpen: boolean;
   onClose: () => void;
   isGenerating?: boolean;
+  onSuccess?: (pdfUrl: string) => void;
 }
 
-export const CoverLetterModal = ({ isOpen, onClose, isGenerating = false }: CoverLetterModalProps) => {
+export const CoverLetterModal = ({ isOpen, onClose, isGenerating = false, onSuccess }: CoverLetterModalProps) => {
   const [coverLetter, setCoverLetter] = useState('');
   const toast = useToast();
 
@@ -29,13 +30,24 @@ export const CoverLetterModal = ({ isOpen, onClose, isGenerating = false }: Cove
   };
 
   const handleSave = async () => {
-    // TODO: Implement cover letter saving
-    onClose();
-    toast({
-      title: 'Cover letter saved',
-      status: 'success',
-      duration: 3000,
-    });
+    try {
+      // TODO: Implement actual PDF generation
+      const pdfUrl = '/sample-cover-letter.pdf'; // This should be replaced with actual PDF generation
+      onSuccess?.(pdfUrl);
+      onClose();
+      toast({
+        title: 'Cover letter saved',
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error saving cover letter:', error);
+      toast({
+        title: 'Error saving cover letter',
+        status: 'error',
+        duration: 3000,
+      });
+    }
   };
 
   return (

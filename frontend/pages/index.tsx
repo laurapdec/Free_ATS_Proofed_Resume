@@ -18,7 +18,7 @@ export default function HomePage() {
     <MainLayout>
       <Box textAlign="center" py={20}>
         <Text fontSize="xl" color="gray.500">
-          Paste a job description to start analyzing your CV
+          Welcome ! Let's create an application that stands out.
         </Text>
       </Box>
     </MainLayout>

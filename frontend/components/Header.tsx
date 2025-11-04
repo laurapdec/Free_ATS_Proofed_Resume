@@ -53,6 +53,14 @@ export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
                     </Button>
                   </Link>
                 )}
+                <Link href="/account" passHref>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                  >
+                    Manage Account
+                  </Button>
+                </Link>
                 <Button
                   size="sm"
                   variant="outline"
@@ -76,12 +84,12 @@ export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
                     Sign In
                   </Button>
                 </Link>
-                <Link href="/signin" passHref>
+                <Link href="/register" passHref>
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="solid"
                     colorScheme="blue"
-                    isDisabled={isAuthPage && router.pathname === '/signin'}
+                    isDisabled={isAuthPage && router.pathname === '/register'}
                   >
                     Register
                   </Button>

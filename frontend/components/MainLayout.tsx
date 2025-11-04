@@ -1,4 +1,4 @@
-import { Box, Flex, VStack, Text, Input, Button, Divider, useColorModeValue, IconButton, Badge, Tooltip } from '@chakra-ui/react';
+import { Box, Flex, VStack, Text, Input, Button, Divider, useColorModeValue, IconButton, Badge, Tooltip, Spinner } from '@chakra-ui/react';
 import { AttachmentIcon, EditIcon, ArrowForwardIcon, StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -19,6 +19,13 @@ interface DonutChartProps {
   percentage: number;
   size?: number;
   strokeWidth?: number;
+}
+
+interface CoverLetterModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isGenerating: boolean;
+  onSuccess?: (pdfUrl: string) => void;
 }
 
 const DonutChart: React.FC<DonutChartProps> = ({ percentage, size = 60, strokeWidth = 8 }) => {
@@ -116,17 +123,63 @@ import { useRouter } from 'next/router';
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element => {
   const router = useRouter();
+  
+  // Authentication and Resume states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
+  
+  // Layout and UI states
+  const [splitPosition, setSplitPosition] = useState(50);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
+  const [coverLetterPdfUrl, setCoverLetterPdfUrl] = useState<string | null>(null);
+  
+  // Modal states
   const [isCoverLetterModalOpen, setIsCoverLetterModalOpen] = useState(false);
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
+  
+  // AI and messaging states
   const [hasInitialPrompt, setHasInitialPrompt] = useState(false);
-  const [splitPosition, setSplitPosition] = useState(50); // percentage
+  const [jobDescription, setJobDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
 
-  const isAuthPage = router.pathname === '/signin' ;
-  const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
+  const isAuthPage = router.pathname === '/signin';
   const bgColor = useColorModeValue('gray.50', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  const handleJobDescriptionSubmit = async () => {
+    if (!jobDescription.trim() || !resumes.length) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/analyze-job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jobDescription,
+          resume: resumes[0], // Using the first resume
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze job description');
+      }
+
+      const data = await response.json();
+      setMessages(prev => [...prev, 
+        { role: 'user', content: jobDescription },
+        { role: 'assistant', content: data.analysis }
+      ]);
+    } catch (error) {
+      console.error('Error analyzing job description:', error);
+      // You might want to show an error toast here
+    } finally {
+      setIsLoading(false);
+      setJobDescription('');
+    }
+  };
 
   // Handle initial resume upload
   useEffect(() => {
@@ -134,7 +187,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
       // Simulate AI analyzing the resume
       const timer = setTimeout(() => {
         setHasInitialPrompt(true);
-        // TODO: Trigger AI analysis here
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'I have analyzed your resume. You can now paste a job description, and I will help you optimize your application.'
+        }]);
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -418,7 +474,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
 
   return (
     <Flex direction="column" h="100vh" overflow="hidden">
-      <Header />
+      <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       <Flex flex="1" overflow="hidden">
         {/* Sidebar - 30% width */}
         <Box
@@ -432,105 +488,146 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
         </Box>
 
         {/* Main content - 70% width */}
-        <Flex w="70%" direction="column" h="full" id="main-content">
-          {/* Split view area */}
-          <Box flex="1" position="relative" display="flex">
-            {/* CV Preview */}
-            <Box
-              w={resumes.length ? `${splitPosition}%` : "0"}
-              transition="width 0.2s"
-              borderRight="1px"
-              borderColor={borderColor}
-              bg={bgColor}
-              overflowY="auto"
-              position="relative"
-            >
-              {resumes.length > 0 && (
-                <>
-                  <Box p={0} h="full">
-                    <Box h="calc(100% )">
-                      {currentPdfUrl ? (
-                        <PDFViewer file={currentPdfUrl} />
-                      ) : (
-                        <Flex
-                          h="full"
-                          alignItems="center"
-                          justifyContent="center"
-                          bg={useColorModeValue('white', 'gray.700')}
-                          borderRadius="md"
-                          p={4}
-                          borderWidth="2px"
-                          borderStyle="dashed"
-                          borderColor={borderColor}
-                        >
-                          <Text color="gray.500">
-                            Your resume preview will appear here
-                          </Text>
-                        </Flex>
-                      )}
-                    </Box>
-                  </Box>
-                </>
-              )}
-            </Box>
-
-            {/* Chat area with input */}
-            <Flex 
-              direction="column"
-              w={resumes.length ? `${100 - splitPosition}%` : "100%"}
-              transition="width 0.2s"
-            >
-              {/* Chat messages */}
-              <Box 
-                flex="1" 
-                overflowY="auto" 
-                p={4}
+        <Box w="70%" position="relative">
+          <Flex direction="column" h="full" id="main-content">
+            {/* Split view area */}
+            <Box flex="1" position="relative" display="flex">
+              {/* CV Preview */}
+              <Box
+                w={resumes.length ? `${splitPosition}%` : "0"}
+                transition="width 0.2s"
+                borderRight="1px"
+                borderColor={borderColor}
+                bg={bgColor}
+                overflowY="auto"
+                position="relative"
               >
-                {resumes.length > 0 && !hasInitialPrompt && (
-                  <Box 
-                    p={4} 
-                    bg={useColorModeValue('blue.50', 'blue.900')} 
-                    borderRadius="lg"
-                    mb={4}
-                  >
-                    <Text fontWeight="medium" color={useColorModeValue('blue.600', 'blue.200')}>
-                      I'm analyzing your resume... This will just take a moment.
-                    </Text>
-                  </Box>
+                {resumes.length > 0 && (
+                  <>
+                    <Box p={0} h="full">
+                      <Box h="calc(100% )">
+                        {currentPdfUrl ? (
+                          <PDFViewer file={currentPdfUrl} />
+                        ) : (
+                          <Flex
+                            h="full"
+                            alignItems="center"
+                            justifyContent="center"
+                            bg={useColorModeValue('white', 'gray.700')}
+                            borderRadius="md"
+                            p={4}
+                            borderWidth="2px"
+                            borderStyle="dashed"
+                            borderColor={borderColor}
+                          >
+                            <Text color="gray.500">
+                              Your resume preview will appear here
+                            </Text>
+                          </Flex>
+                        )}
+                      </Box>
+                    </Box>
+                  </>
                 )}
-                {children}
               </Box>
 
-              {/* Job description input area */}
-              <Box p={4} borderTop="1px" borderColor={borderColor} bg={bgColor}>
-                <Flex gap={2}>
-                  <Tooltip 
-                    label="Attach cover letters"
-                    placement="top"
-                    hasArrow
-                  >
-                    <IconButton
-                      aria-label="Attach cover letter"
-                      icon={<AttachmentIcon />}
-                      size="lg"
-                      variant="ghost"
-                    />
-                  </Tooltip>
-                  <Input
-                    flex="1"
-                    placeholder="Paste the job description"
-                    size="lg"
-                    variant="filled"
-                  />
-                  <IconButton
-                    aria-label="Send"
-                    icon={<ArrowForwardIcon />}
-                    size="lg"
-                    colorScheme="blue"
-                  />
-                </Flex>
-              </Box>
-            </Flex>
+              {/* Chat area with input */}
+              <Flex 
+                direction="column"
+                w={resumes.length ? `${100 - splitPosition}%` : "100%"}
+                transition="width 0.2s"
+              >
+                {/* Chat messages */}
+                <Box 
+                  flex="1" 
+                  overflowY="auto" 
+                  p={4}
+                >
+                  {resumes.length > 0 && !hasInitialPrompt && (
+                    <Box 
+                      p={4} 
+                      bg={useColorModeValue('blue.50', 'blue.900')} 
+                      borderRadius="lg"
+                      mb={4}
+                    >
+                      <Text fontWeight="medium" color={useColorModeValue('blue.600', 'blue.200')}>
+                        I'm analyzing your resume... This will just take a moment.
+                      </Text>
+                    </Box>
+                  )}
+                  {messages.map((message, index) => (
+                    <Box
+                      key={index}
+                      mb={4}
+                      p={4}
+                      bg={message.role === 'assistant' 
+                        ? useColorModeValue('blue.50', 'blue.900')
+                        : useColorModeValue('gray.50', 'gray.700')}
+                      borderRadius="lg"
+                    >
+                      <Text
+                        color={message.role === 'assistant'
+                          ? useColorModeValue('blue.600', 'blue.200')
+                          : 'inherit'}
+                      >
+                        {message.content}
+                      </Text>
+                    </Box>
+                  ))}
+                  {children}
+                </Box>
+
+                {/* Job description input area */}
+                <Box p={4} borderTop="1px" borderColor={borderColor} bg={bgColor}>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleJobDescriptionSubmit();
+                  }}>
+                    <Flex gap={2}>
+                      <Tooltip 
+                        label="Open Cover Letter"
+                        placement="top"
+                        hasArrow
+                      >
+                        <IconButton
+                          aria-label="Open cover letter"
+                          icon={<AttachmentIcon />}
+                          size="lg"
+                          variant="ghost"
+                          onClick={() => {
+                            if (coverLetterPdfUrl) {
+                              // If we already have a cover letter PDF, show it in the PDFViewer
+                              setCurrentPdfUrl(coverLetterPdfUrl);
+                            } else {
+                              // If no cover letter yet, open the modal to generate one
+                              setIsCoverLetterModalOpen(true);
+                            }
+                          }}
+                        />
+                      </Tooltip>
+                      <Input
+                        flex="1"
+                        placeholder="Paste the job description"
+                        size="lg"
+                        variant="filled"
+                        value={jobDescription}
+                        onChange={(e) => setJobDescription(e.target.value)}
+                        disabled={isLoading || !resumes.length}
+                      />
+                      <IconButton
+                        aria-label="Send"
+                        icon={isLoading ? <Spinner size="sm" /> : <ArrowForwardIcon />}
+                        size="lg"
+                        colorScheme="blue"
+                        type="submit"
+                        isLoading={isLoading}
+                        disabled={!jobDescription.trim() || !resumes.length}
+                      />
+                    </Flex>
+                  </form>
+                </Box>
+              </Flex>
+            </Box>
 
             {/* Resizer */}
             {resumes.length > 0 && (
@@ -549,16 +646,22 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 userSelect="none"
               />
             )}
-          </Box>
-        </Flex>
+          </Flex>
+        </Box>
       </Flex>
 
       {/* Cover Letter Modal */}
-      <CoverLetterModal
-        isOpen={isCoverLetterModalOpen}
-        onClose={() => setIsCoverLetterModalOpen(false)}
-        isGenerating={isGeneratingCoverLetter}
-      />
+      {isCoverLetterModalOpen && (
+        <CoverLetterModal
+          isOpen={true}
+          onClose={() => setIsCoverLetterModalOpen(false)}
+          isGenerating={isGeneratingCoverLetter}
+          onSuccess={(pdfUrl) => {
+            setCoverLetterPdfUrl(pdfUrl);
+            setIsCoverLetterModalOpen(false);
+          }}
+        />
+      )}
     </Flex>
   );
 };
