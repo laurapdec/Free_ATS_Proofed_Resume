@@ -1,13 +1,14 @@
 import { Button, Input, useToast, Spinner } from '@chakra-ui/react';
 import { useCallback, useRef, useState } from 'react';
 import { AttachmentIcon } from '@chakra-ui/icons';
-import type { Resume } from '../types/resume';
 
-interface ScanCVButtonProps {
-  onProfileLoaded?: (resume: Resume) => void;
+interface FileUploadProps {
+  onFileSelected: (file: File) => Promise<void>;
+  label: string;
+  accept?: string;
 }
 
-export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
+export const FileUpload = ({ onFileSelected, label, accept = ".pdf,.docx" }: FileUploadProps) => {
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +17,7 @@ export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Only accept PDF and DOCX files
+    // Check file type
     if (!file.type.match('application/pdf|application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
       toast({
         title: 'Invalid file type',
@@ -29,34 +30,13 @@ export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
     }
 
     setIsLoading(true);
-
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/scan-cv', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to scan CV');
-      }
-
-      const data = await response.json();
-      toast({
-        title: 'CV Scanned Successfully',
-        description: 'Processing your CV...',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-      onProfileLoaded?.(data);
+      await onFileSelected(file);
     } catch (error) {
-      console.error('Error scanning CV:', error);
+      console.error('Error processing file:', error);
       toast({
         title: 'Error',
-        description: 'Failed to scan your CV. Please try again.',
+        description: 'Failed to process your file. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -64,7 +44,7 @@ export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, onProfileLoaded]);
+  }, [onFileSelected, toast]);
 
   const handleClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -74,7 +54,7 @@ export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
     <>
       <Input
         type="file"
-        accept=".pdf,.docx"
+        accept={accept}
         ref={fileInputRef}
         onChange={handleFileChange}
         display="none"
@@ -85,8 +65,9 @@ export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
         colorScheme="blue"
         leftIcon={isLoading ? <Spinner size="sm" /> : <AttachmentIcon />}
         isDisabled={isLoading}
+        width="full"
       >
-        {isLoading ? 'Scanning...' : 'Upload your CV'}
+        {isLoading ? 'Processing...' : label}
       </Button>
     </>
   );

@@ -190,8 +190,10 @@ async def generate_pdf(resume_data: Dict[Any, Any]):
             
         # Return the PDF file with appropriate headers
         headers = {
-            'Content-Disposition': 'attachment; filename="resume.pdf"',
+            'Content-Disposition': 'inline; filename="resume.pdf"',
             'Access-Control-Expose-Headers': 'Content-Disposition',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=3600'
         }
         
         return FileResponse(

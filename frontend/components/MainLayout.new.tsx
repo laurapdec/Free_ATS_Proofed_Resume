@@ -16,11 +16,7 @@ interface MainLayoutProps {
   children?: React.ReactNode;
 }
 
-interface DonutChartProps {
-  percentage: number;
-  size?: number;
-  strokeWidth?: number;
-}
+import { DonutChart } from './DonutChart';
 
 interface CoverLetterModalProps {
   isOpen: boolean;
@@ -29,47 +25,58 @@ interface CoverLetterModalProps {
   onSuccess?: (pdfUrl: string) => void;
 }
 
-// Existing DonutChart component remains unchanged
-const DonutChart: React.FC<DonutChartProps> = ({ percentage, size = 60, strokeWidth = 8 }) => {
-  // ... rest of DonutChart implementation
-};
-
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element => {
+  // All hooks must be called before any conditional logic
+  // Theme hooks must be called first
+  const bgColor = useColorModeValue('gray.50', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const whiteOrGray700 = useColorModeValue('white', 'gray.700');
+  const blue50OrBlue900 = useColorModeValue('blue.50', 'blue.900');
+  const blue600OrBlue200 = useColorModeValue('blue.600', 'blue.200');
+  const gray50OrGray700 = useColorModeValue('gray.50', 'gray.700');
+  const blue100OrBlue700 = useColorModeValue('blue.100', 'blue.700');
+
+  // Router hooks
   const router = useRouter();
   
-  // Authentication and Resume states
+  // State hooks
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
-  
-  // Layout and UI states
   const [splitPosition, setSplitPosition] = useState(50);
   const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
   const [coverLetterPdfUrl, setCoverLetterPdfUrl] = useState<string | null>(null);
-  
-  // Modal states
   const [isCoverLetterModalOpen, setIsCoverLetterModalOpen] = useState(false);
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
-  
-  // AI and messaging states
   const [hasInitialPrompt, setHasInitialPrompt] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
 
-  const bgColor = useColorModeValue('gray.50', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-
-  // Handle initial resume upload
+  // Handle initial resume upload and PDF generation
   useEffect(() => {
     if (resumes.length > 0 && !hasInitialPrompt) {
-      const timer = setTimeout(() => {
-        setHasInitialPrompt(true);
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: 'I have analyzed your resume. You can now paste a job description, and I will help you optimize your application.'
-        }]);
-      }, 2000);
-      return () => clearTimeout(timer);
+      const generateResumePreview = async () => {
+        try {
+          const url = await generatePDF(resumes[0]);
+          setCurrentPdfUrl(url);
+          const timer = setTimeout(() => {
+            setHasInitialPrompt(true);
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: 'I have analyzed your resume. You can now paste a job description, and I will help you optimize your application.'
+            }]);
+          }, 1000);
+          return () => clearTimeout(timer);
+        } catch (error) {
+          console.error('Error generating PDF:', error);
+          setHasInitialPrompt(true);
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: 'Failed to load PDF preview. You can still proceed with optimizing your resume. Please paste a job description to continue.'
+          }]);
+        }
+      };
+      generateResumePreview();
     }
   }, [resumes.length, hasInitialPrompt]);
 
@@ -170,7 +177,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                           h="full"
                           alignItems="center"
                           justifyContent="center"
-                          bg={useColorModeValue('white', 'gray.700')}
+                          bg={whiteOrGray700}
                           borderRadius="md"
                           p={4}
                           borderWidth="2px"
@@ -201,14 +208,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                     key={index}
                     mb={4}
                     p={4}
-                    bg={message.role === 'assistant' 
-                      ? useColorModeValue('blue.50', 'blue.900')
-                      : useColorModeValue('gray.50', 'gray.700')}
+                    bg={message.role === 'assistant' ? blue50OrBlue900 : gray50OrGray700}
                     borderRadius="lg"
                   >
-                    <Text color={message.role === 'assistant'
-                      ? useColorModeValue('blue.600', 'blue.200')
-                      : 'inherit'}
+                    <Text color={message.role === 'assistant' ? blue600OrBlue200 : 'inherit'}
                     >
                       {message.content}
                     </Text>
@@ -277,7 +280,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 transform="translateX(-50%)"
                 cursor="col-resize"
                 bg="transparent"
-                _hover={{ bg: useColorModeValue('blue.100', 'blue.700') }}
+                _hover={{ bg: blue100OrBlue700 }}
                 transition="background-color 0.2s"
                 onMouseDown={handleMouseDown}
                 userSelect="none"

@@ -1,4 +1,4 @@
-import { Box, Flex, VStack, Text, Input, Button, Divider, useColorModeValue, IconButton, Badge, Tooltip, Spinner } from '@chakra-ui/react';
+import { Box, Flex, VStack, Text, Input, Button, Divider, useColorModeValue, IconButton, Badge, Tooltip, Spinner, Image, useToast } from '@chakra-ui/react';
 import { AttachmentIcon, EditIcon, ArrowForwardIcon, StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -122,7 +122,13 @@ const EyeIcon: React.FC = () => (
 import { useRouter } from 'next/router';
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element => {
+  // Theme hooks must be called first and in the same order
+  const bgColor = useColorModeValue('gray.50', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  
+  // Router and utility hooks
   const router = useRouter();
+  const toast = useToast();
   
   // Authentication and Resume states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -144,8 +150,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
 
   const isAuthPage = router.pathname === '/signin';
-  const bgColor = useColorModeValue('gray.50', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   const handleJobDescriptionSubmit = async () => {
     if (!jobDescription.trim() || !resumes.length) return;
@@ -183,8 +187,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
 
   // Handle initial resume upload
   useEffect(() => {
-    if (resumes.length > 0 && !hasInitialPrompt) {
-      // Simulate AI analyzing the resume
+    if (resumes.length > 0 && !hasInitialPrompt && isLoggedIn && currentPdfUrl) {
+      // Only show the message after we have a valid PDF and the user is logged in
       const timer = setTimeout(() => {
         setHasInitialPrompt(true);
         setMessages(prev => [...prev, {
@@ -194,7 +198,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [resumes.length, hasInitialPrompt]);
+  }, [resumes.length, hasInitialPrompt, isLoggedIn, currentPdfUrl]);
 
   // Handle split view resizing
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -222,20 +226,43 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
     return (
       <VStack spacing={4} w="full" p={4}>
         {!resumes.length ? (
-          <VStack spacing={4} w="full">
-            <Text fontWeight="semibold">Import Resume</Text>
+          <VStack spacing={4} w="full" mt={4}>
             <LinkedInSignIn
               onProfileLoaded={async (resume) => {
-                if (isValidResume(resume)) {
-                  setResumes([resume]);
-                  try {
-                    const url = await generatePDF(resume);
-                    setCurrentPdfUrl(url);
-                    setIsLoggedIn(true); // Set login state
-                  } catch (error) {
-                    console.error('Error generating PDF:', error);
-                    // You might want to show an error toast here
+                try {
+                  if (!isValidResume(resume)) {
+                    throw new Error('Invalid resume data received');
                   }
+
+                  setResumes([resume]);
+                  const url = await generatePDF(resume);
+                  if (!url) {
+                    throw new Error('Failed to generate PDF');
+                  }
+
+                  setCurrentPdfUrl(url);
+                  setIsLoggedIn(true);
+                  
+                  toast({
+                    title: 'Resume uploaded successfully',
+                    description: 'Your resume has been processed and is ready for optimization.',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                } catch (error) {
+                  console.error('Error processing resume:', error);
+                  toast({
+                    title: 'Error processing resume',
+                    description: error instanceof Error ? error.message : 'Failed to process your resume. Please try again.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                  // Reset states on error
+                  setResumes([]);
+                  setCurrentPdfUrl(null);
+                  setIsLoggedIn(false);
                 }
               }}
             />
@@ -446,29 +473,38 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 </Flex>
               </VStack>
             </Box>
-
-            <Text fontSize="sm" color="gray.600" textAlign="center">
-              {isLoggedIn ? (
-                "Start optimizing your applications"
-              ) : (
-                <>
-                  <Link href="/signin" passHref>
-                    <Button
-                      variant="link"
-                      color="blue.500"
-                      fontWeight="medium"
-                    >
-                      Sign in
-                    </Button>
-                  </Link>
-                  {" "}
-                  to unlock all premium features
-                </>
-              )}
-            </Text>
           </VStack>
-        </VStack>
       </VStack>
+      <VStack spacing={4} w="full" pt={8} pb={4}>
+      <Text fontSize="sm" color="gray.600" textAlign="center">
+        {isLoggedIn ? (
+          "Start optimizing your applications"
+        ) : (
+          <>
+            <Link href="/signin" passHref>
+              <Button
+                variant="link"
+                color="blue.500"
+                fontWeight="medium"
+              >
+                Sign in
+              </Button>
+            </Link>
+            {" "}
+            to unlock all premium features
+          </>
+        )}
+      </Text>
+      <Box as="a" href="https://www.buymeacoffee.com/atsproofedcv" target="_blank" rel="noopener noreferrer">
+        <Image
+          src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+          alt="Buy Me A Coffee"
+          height="30px"
+          width="108.5px"
+        />
+      </Box>
+    </VStack>
+    </VStack>
     );
   };
 

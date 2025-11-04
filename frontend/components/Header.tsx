@@ -9,8 +9,14 @@ interface HeaderProps {
 }
 
 export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
-  const router = useRouter();
+  // Theme hooks must be called first
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const bgColor = useColorModeValue('white', 'gray.800');
+  
+  // Router hooks
+  const router = useRouter();
+  
+  // Derived state
   const isAuthPage = router.pathname === '/signin' || router.pathname === '/signin';
   const isEditorPage = router.pathname === '/editor';
 
@@ -21,7 +27,7 @@ export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
       px={6} 
       borderBottom="1px" 
       borderColor={borderColor}
-      bg={useColorModeValue('white', 'gray.800')}
+      bg={bgColor}
       >
         <Flex justify="space-between" align="center">
           <Flex align="center" gap={4}>
@@ -42,28 +48,19 @@ export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
           </Flex>
           <Flex gap={6} align="center">
             {isLoggedIn ? (
-              <Flex gap={2}>
-                {isEditorPage && (
-                  <Link href="/" passHref>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                    >
-                      Home
-                    </Button>
-                  </Link>
-                )}
+              <Flex gap={3}>
                 <Link href="/account" passHref>
                   <Button
                     size="sm"
                     variant="ghost"
+                    colorScheme="blue"
                   >
                     Manage Account
                   </Button>
                 </Link>
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="solid"
                   colorScheme="blue"
                   onClick={() => {
                     setIsLoggedIn(false);
@@ -74,22 +71,23 @@ export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
                 </Button>
               </Flex>
             ) : (
-              <Flex gap={2}>
+              <Flex gap={3}>
                 <Link href="/signin" passHref>
                   <Button
                     size="sm"
+                    variant="ghost"
                     colorScheme="blue"
                     isDisabled={isAuthPage && router.pathname === '/signin'}
                   >
                     Sign In
                   </Button>
                 </Link>
-                <Link href="/register" passHref>
+                <Link href="/signin" passHref>
                   <Button
                     size="sm"
                     variant="solid"
                     colorScheme="blue"
-                    isDisabled={isAuthPage && router.pathname === '/register'}
+                    isDisabled={isAuthPage && router.pathname === '/signin'}
                   >
                     Register
                   </Button>

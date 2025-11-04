@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { LanguageServiceClient } from '@google-cloud/language';
+import { LanguageServiceClient, protos } from '@google-cloud/language';
 
 // Initialize the Language client
 const client = new LanguageServiceClient();
@@ -17,28 +17,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Analyze the job description with Google Cloud Natural Language API
-    const document = {
+    const document: protos.google.cloud.language.v1.IDocument = {
       content: jobDescription,
-      type: 'PLAIN_TEXT',
+      type: protos.google.cloud.language.v1.Document.Type.PLAIN_TEXT,
     };
 
     // Perform entity and sentiment analysis
-    const [result] = await client.analyzeEntities({ document });
-    const [sentiment] = await client.analyzeSentiment({ document });
+    const entityResults = await client.analyzeEntities({ document });
+    const sentimentResults = await client.analyzeSentiment({ document });
+    
+    const entities = entityResults[0].entities || [];
+    const sentiment = sentimentResults[0].documentSentiment;
 
     // Extract key skills and requirements from job description
-    const skills = result.entities
-      .filter(entity => 
-        entity.type === 'SKILL' || 
-        entity.type === 'TECHNOLOGY' ||
-        entity.type === 'UNKNOWN' // Sometimes skills are tagged as unknown
+    const skills = entities
+      .filter((entity: protos.google.cloud.language.v1.IEntity) => 
+        entity.type === protos.google.cloud.language.v1.Entity.Type.OTHER || // Skills are often tagged as OTHER
+        entity.type === protos.google.cloud.language.v1.Entity.Type.CONSUMER_GOOD || // Technology products
+        entity.type === protos.google.cloud.language.v1.Entity.Type.UNKNOWN // Sometimes skills are tagged as unknown
       )
-      .map(entity => entity.name);
+      .map((entity: protos.google.cloud.language.v1.IEntity) => entity.name || '');
 
     // Compare with resume
     const resumeSkills = new Set(resume.skills || []);
-    const matchingSkills = skills.filter(skill => resumeSkills.has(skill));
-    const missingSkills = skills.filter(skill => !resumeSkills.has(skill));
+    const matchingSkills = skills.filter((skill: string) => resumeSkills.has(skill));
+    const missingSkills = skills.filter((skill: string) => !resumeSkills.has(skill));
 
     // Generate personalized analysis
     const analysis = `
@@ -53,7 +56,7 @@ Based on my analysis of the job description:
    - Consider acquiring or emphasizing experience in these areas
 
 3. Job Sentiment:
-   - Overall tone: ${sentiment.documentSentiment.score > 0 ? 'Positive' : 'Neutral'}
+   - Overall tone: ${(sentiment?.score || 0) > 0 ? 'Positive' : 'Neutral'}
    - Key requirements identified: ${skills.length}
 
 Would you like me to help you tailor your resume for this position or generate a customized cover letter?`;

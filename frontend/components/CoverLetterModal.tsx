@@ -11,8 +11,11 @@ import {
   Textarea,
   VStack,
   useToast,
-  Text
+  Text,
+  Divider
 } from '@chakra-ui/react';
+import { EditIcon } from '@chakra-ui/icons';
+import { FileUpload } from './FileUpload';
 
 interface CoverLetterModalProps {
   isOpen: boolean;
@@ -23,7 +26,46 @@ interface CoverLetterModalProps {
 
 export const CoverLetterModal = ({ isOpen, onClose, isGenerating = false, onSuccess }: CoverLetterModalProps) => {
   const [coverLetter, setCoverLetter] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const toast = useToast();
+
+  const handleFileUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload-cover-letter', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload cover letter');
+      }
+
+      const data = await response.json();
+      onSuccess?.(data.url);
+      onClose();
+      
+      toast({
+        title: 'Upload successful',
+        description: 'Your cover letter has been uploaded.',
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error uploading cover letter:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload your cover letter. Please try again.',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleGenerate = async () => {
     // TODO: Implement cover letter generation
