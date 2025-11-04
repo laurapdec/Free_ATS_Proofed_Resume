@@ -1,11 +1,11 @@
 import { Box, VStack, Heading, Button, SimpleGrid } from '@chakra-ui/react';
 import { EditableField } from './EditableField';
-import type { Language } from '../types/resume';
+import type { Language } from '../../types/resume';
 import { AddIcon } from '@chakra-ui/icons';
 
 interface LanguageSectionProps {
   languages: Language[];
-  onUpdate: (id: string, field: keyof Language, value: string) => void;
+  onUpdate: (id: string, field: string, value: string) => void;
   onAdd: () => void;
 }
 

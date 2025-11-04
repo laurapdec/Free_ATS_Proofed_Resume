@@ -29,12 +29,14 @@ export default function ResumeEditor() {
   });
 
   // Generic update handlers
-  const updateContact = (field: keyof typeof resume.contactInfo, value: string) => {
+  const updateContact = (field: string, value: string) => {
     setResume((prev) => ({
       ...prev,
       contactInfo: {
         ...prev.contactInfo,
-        [field]: value,
+        ...((field === 'city' || field === 'country') 
+          ? { location: { ...prev.contactInfo.location, [field]: value } }
+          : { [field]: value })
       },
     }));
   };
@@ -51,16 +53,14 @@ export default function ResumeEditor() {
   
   const createUpdateHandler = <
     K extends ResumeSectionKey,
-    T extends SectionToType[K],
-    F extends keyof T
+    T extends SectionToType[K]
   >(
-    section: K,
-    field: F
-  ) => (id: string, value: string) => {
+    section: K
+  ) => (id: string, field: string, value: string) => {
     setResume((prev) => ({
       ...prev,
       [section]: (prev[section] as T[]).map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
+        item.id === id ? { ...item, [field as keyof T]: value } : item
       ),
     }));
   };
@@ -123,7 +123,7 @@ export default function ResumeEditor() {
         />
         <ExperienceSection
           experiences={resume.experiences}
-          onUpdate={createUpdateHandler('experiences', 'title')}
+          onUpdate={createUpdateHandler('experiences')}
           onAdd={createAddHandler('experiences', {
             title: 'New Position',
             company: 'Company Name',
@@ -136,7 +136,7 @@ export default function ResumeEditor() {
         />
         <EducationSection
           education={resume.education}
-          onUpdate={createUpdateHandler('education', 'school')}
+          onUpdate={createUpdateHandler('education')}
           onAdd={createAddHandler('education', {
             school: 'School Name',
             degree: 'Degree',
@@ -147,7 +147,7 @@ export default function ResumeEditor() {
         />
         <PublicationSection
           publications={resume.publications}
-          onUpdate={createUpdateHandler('publications', 'title')}
+          onUpdate={createUpdateHandler('publications')}
           onAdd={createAddHandler('publications', {
             title: 'Publication Title',
             publisher: 'Publisher',
@@ -157,7 +157,7 @@ export default function ResumeEditor() {
         />
         <SkillsSection
           skills={resume.skills}
-          onUpdate={createUpdateHandler('skills', 'name')}
+          onUpdate={createUpdateHandler('skills')}
           onAdd={createAddHandler('skills', {
             name: 'Skill Name',
             level: 'Intermediate',
@@ -165,7 +165,7 @@ export default function ResumeEditor() {
         />
         <LanguageSection
           languages={resume.languages}
-          onUpdate={createUpdateHandler('languages', 'name')}
+          onUpdate={createUpdateHandler('languages')}
           onAdd={createAddHandler('languages', {
             name: 'Language Name',
             proficiency: 'Professional Working',

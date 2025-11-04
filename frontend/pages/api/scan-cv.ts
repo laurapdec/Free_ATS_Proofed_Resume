@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import { v4 as uuidv4 } from 'uuid';
-import type { Resume } from '../../../types/resume';
+import type { Resume } from '../../types/resume';
 
 export const config = {
   api: {

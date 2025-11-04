@@ -1,11 +1,11 @@
 import { Box, VStack, Heading, Button } from '@chakra-ui/react';
 import { EditableField } from './EditableField';
-import type { Experience } from '../types/resume';
+import type { Experience } from '../../types/resume';
 import { AddIcon } from '@chakra-ui/icons';
 
 interface ExperienceSectionProps {
   experiences: Experience[];
-  onUpdate: (id: string, field: keyof Experience, value: string) => void;
+  onUpdate: (id: string, field: string, value: string) => void;
   onAdd: () => void;
 }
 
@@ -25,6 +25,9 @@ export const ExperienceSection = ({ experiences, onUpdate, onAdd }: ExperienceSe
               label="Title"
               value={exp.title}
               onSave={(value) => onUpdate(exp.id, 'title', value)}
+              textAlign="center"
+              fontSize="lg"
+              fontWeight="bold"
             />
             <EditableField
               label="Company"

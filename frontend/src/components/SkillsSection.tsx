@@ -1,11 +1,11 @@
 import { Box, VStack, Heading, Button, SimpleGrid } from '@chakra-ui/react';
 import { EditableField } from './EditableField';
-import type { Skill } from '../types/resume';
+import type { Skill } from '../../types/resume';
 import { AddIcon } from '@chakra-ui/icons';
 
 interface SkillsSectionProps {
   skills: Skill[];
-  onUpdate: (id: string, field: keyof Skill, value: string) => void;
+  onUpdate: (id: string, field: string, value: string) => void;
   onAdd: () => void;
 }
 

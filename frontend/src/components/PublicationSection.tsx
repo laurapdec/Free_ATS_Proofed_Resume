@@ -1,11 +1,11 @@
 import { Box, VStack, Heading, Button } from '@chakra-ui/react';
 import { EditableField } from './EditableField';
-import type { Publication } from '../types/resume';
+import type { Publication } from '../../types/resume';
 import { AddIcon } from '@chakra-ui/icons';
 
 interface PublicationSectionProps {
   publications: Publication[];
-  onUpdate: (id: string, field: keyof Publication, value: string) => void;
+  onUpdate: (id: string, field: string, value: string) => void;
   onAdd: () => void;
 }
 

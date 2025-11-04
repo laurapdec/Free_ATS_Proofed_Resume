@@ -7,9 +7,22 @@ interface EditableFieldProps {
   label: string;
   isMultiline?: boolean;
   onSave: (newValue: string) => void;
+  textAlign?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  sx?: Record<string, any>;
 }
 
-export const EditableField = ({ value, label, isMultiline = false, onSave }: EditableFieldProps) => {
+export const EditableField = ({ 
+  value, 
+  label, 
+  isMultiline = false, 
+  onSave,
+  textAlign,
+  fontSize,
+  fontWeight,
+  sx = {}
+}: EditableFieldProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editValue, setEditValue] = useState(value);
 
@@ -39,8 +52,13 @@ export const EditableField = ({ value, label, isMultiline = false, onSave }: Edi
           )}
         </>
       ) : (
-        <Box display="flex" alignItems="center">
-          <Text fontWeight={label ? 'bold' : 'normal'}>
+        <Box display="flex" alignItems="center" justifyContent={textAlign === 'center' ? 'center' : 'flex-start'} width="100%">
+          <Text 
+            fontWeight={fontWeight || (label ? 'bold' : 'normal')}
+            fontSize={fontSize}
+            textAlign={textAlign as any}
+            sx={sx}
+          >
             {label && `${label}: `}{value}
           </Text>
           <IconButton

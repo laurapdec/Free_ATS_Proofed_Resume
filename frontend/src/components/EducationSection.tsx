@@ -1,11 +1,11 @@
 import { Box, VStack, Heading, Button } from '@chakra-ui/react';
 import { EditableField } from './EditableField';
-import type { Education } from '../types/resume';
+import type { Education } from '../../types/resume';
 import { AddIcon } from '@chakra-ui/icons';
 
 interface EducationSectionProps {
   education: Education[];
-  onUpdate: (id: string, field: keyof Education, value: string) => void;
+  onUpdate: (id: string, field: string, value: string) => void;
   onAdd: () => void;
 }
 
