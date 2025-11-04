@@ -117,7 +117,8 @@ async def generate_pdf(resume_data: Dict[Any, Any]):
     try:
         # Create PDF in a temporary directory
         pdf_dir = os.path.join(UPLOAD_DIR, "temp_pdfs")
-        os.makedirs(pdf_dir, exist_ok=True)
+        if not os.path.exists(pdf_dir):
+            os.makedirs(pdf_dir, mode=0o755)
         
         # Create a unique filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -183,11 +184,21 @@ async def generate_pdf(resume_data: Dict[Any, Any]):
         # Build the PDF
         doc.build(story)
 
-        # Return the PDF file
+        # Verify the file exists and is readable
+        if not os.path.exists(pdf_file):
+            raise HTTPException(status_code=500, detail="PDF file was not created successfully")
+            
+        # Return the PDF file with appropriate headers
+        headers = {
+            'Content-Disposition': 'attachment; filename="resume.pdf"',
+            'Access-Control-Expose-Headers': 'Content-Disposition',
+        }
+        
         return FileResponse(
-            pdf_file,
+            path=pdf_file,
             media_type='application/pdf',
             filename='resume.pdf',
+            headers=headers,
             background=None  # Prevent background task from deleting the file
         )
 

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     
     # CORS
-    backend_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.233:3000,http://localhost:8001,http://127.0.0.1:8001,http://192.168.1.233:8001"
+    backend_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.233:3000,http://localhost:8000,http://127.0.0.1:8000,http://192.168.1.233:8000"
     
     # Frontend URL (default to production, override in env)
     frontend_url: str = "http://localhost:3000"
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # LinkedIn OAuth
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
-    linkedin_redirect_uri: str = "http://127.0.0.1:8001/api/v1/linkedin/callback"
+    linkedin_redirect_uri: str = "http://127.0.0.1:8000/api/v1/linkedin/callback"
     
     # Database
     database_url: str = "postgresql://user:password@localhost:5432/ats_resume"
