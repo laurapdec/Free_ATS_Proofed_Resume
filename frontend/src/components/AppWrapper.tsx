@@ -1,5 +1,4 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
-import { Navigation } from './Navigation';
 
 const theme = extendTheme({
   styles: {
@@ -21,7 +20,6 @@ const theme = extendTheme({
 export function AppWrapper({ children }: { children: React.ReactNode }) {
   return (
     <ChakraProvider theme={theme}>
-      <Navigation />
       {children}
     </ChakraProvider>
   );

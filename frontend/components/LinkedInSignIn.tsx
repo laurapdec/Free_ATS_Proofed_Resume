@@ -51,6 +51,15 @@ export const LinkedInSignIn = ({ onProfileLoaded }: LinkedInSignInProps) => {
     authUrl.searchParams.append('state', state);
     authUrl.searchParams.append('scope', scope);
     
+    // Log the request details
+    console.log('[LinkedIn OAuth] Initiating authentication with params:', {
+      clientId,
+      redirectUri,
+      scope,
+      state: state.substring(0, 8) + '...',  // Only log part of the state for security
+      fullUrl: authUrl.toString()
+    });
+    
     // Redirect to LinkedIn's authorization page
     window.location.href = authUrl.toString();
   }, []);

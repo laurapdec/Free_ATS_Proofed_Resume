@@ -1,6 +1,7 @@
-import { Box, Flex, VStack, Text, Input, Button, Divider, useColorModeValue, IconButton, Badge } from '@chakra-ui/react';
-import { AttachmentIcon, EditIcon, ArrowForwardIcon, StarIcon } from '@chakra-ui/icons';
+import { Box, Flex, VStack, Text, Input, Button, Divider, useColorModeValue, IconButton, Badge, Tooltip } from '@chakra-ui/react';
+import { AttachmentIcon, EditIcon, ArrowForwardIcon, StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { LinkedInSignIn } from './LinkedInSignIn';
 import { ScanCVButton } from './ScanCVButton';
 import { CoverLetterModal } from './CoverLetterModal';
@@ -8,6 +9,7 @@ import PDFViewer from './PDFViewer';
 import type { Resume } from '../types/resume';
 import { isValidResume } from '../utils/validation';
 import { generatePDF } from '../utils/api';
+import { Header } from './Header';
 
 interface MainLayoutProps {
   children?: React.ReactNode;
@@ -110,13 +112,18 @@ const EyeIcon: React.FC = () => (
   </svg>
 );
 
+import { useRouter } from 'next/router';
+
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element => {
+  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [isCoverLetterModalOpen, setIsCoverLetterModalOpen] = useState(false);
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
   const [hasInitialPrompt, setHasInitialPrompt] = useState(false);
   const [splitPosition, setSplitPosition] = useState(50); // percentage
+
+  const isAuthPage = router.pathname === '/signin' ;
   const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
   const bgColor = useColorModeValue('gray.50', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -168,6 +175,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                   try {
                     const url = await generatePDF(resume);
                     setCurrentPdfUrl(url);
+                    setIsLoggedIn(true); // Set login state
                   } catch (error) {
                     console.error('Error generating PDF:', error);
                     // You might want to show an error toast here
@@ -183,6 +191,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                   try {
                     const url = await generatePDF(resume);
                     setCurrentPdfUrl(url);
+                    setIsLoggedIn(true); // Set login state
                   } catch (error) {
                     console.error('Error generating PDF:', error);
                     // You might want to show an error toast here
@@ -271,17 +280,17 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                     >
                       <Box flex="1" display="flex" flexDirection="column" alignItems="center" gap={3}>
                         <Box w="full">
-                          <Flex w="full" alignItems="center" gap={2}>
-                            <Box boxSize="16px" display="flex" alignItems="center">
+                          <Flex w="full" alignItems="center" gap={1}>
+                            <Box boxSize="16px" display="flex" alignItems="center" m={1}>
                               <svg viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
                               </svg>
                             </Box>
-                            <Text fontSize="sm" fontWeight="medium">
+                            <Text   ml={1.5} fontSize="sm" fontWeight="medium">
                               Google
                             </Text>
                           </Flex>
-                          <Text fontSize="xs" color={useColorModeValue('gray.600', 'gray.400')} mt={0.5}>
+                          <Text  ml={1.5} w="100%" fontSize="xs"  textAlign="center" color={useColorModeValue('gray.600', 'gray.400')} mt={0.5}>
                             Software Engineer - ML Platform
                           </Text>
                         </Box>
@@ -339,16 +348,16 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                       <Box flex="1" display="flex" flexDirection="column" alignItems="center" gap={3}>
                         <Box w="full">
                           <Flex w="full" alignItems="center" gap={2}>
-                            <Box boxSize="16px" display="flex" alignItems="center">
+                            <Box boxSize="16px" display="flex" alignItems="center" m={1}>
                               <svg viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
                               </svg>
                             </Box>
-                            <Text fontSize="sm" fontWeight="medium">
+                            <Text  ml={1.5}  fontSize="sm" fontWeight="medium">
                               Apple
                             </Text>
                           </Flex>
-                          <Text fontSize="xs" color={useColorModeValue('gray.600', 'gray.400')} mt={0.5}>
+                          <Text  ml={1.5} w="100%" fontSize="xs"  textAlign="center" color={useColorModeValue('gray.600', 'gray.400')} mt={0.5}>
                             Senior Product Designer
                           </Text>
                         </Box>
@@ -387,14 +396,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 "Start optimizing your applications"
               ) : (
                 <>
-                  <Button
-                    variant="link"
-                    color="blue.500"
-                    fontWeight="medium"
-                    onClick={() => {/* TODO: Open sign in modal */}}
-                  >
-                    Sign in
-                  </Button>
+                  <Link href="/signin" passHref>
+                    <Button
+                      variant="link"
+                      color="blue.500"
+                      fontWeight="medium"
+                    >
+                      Sign in
+                    </Button>
+                  </Link>
                   {" "}
                   to unlock all premium features
                 </>
@@ -408,43 +418,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
 
   return (
     <Flex direction="column" h="100vh" overflow="hidden">
-      {/* Header */}
-      <Box 
-        w="full" 
-        py={4} 
-        px={6} 
-        borderBottom="1px" 
-        borderColor={borderColor}
-        bg={useColorModeValue('white', 'gray.800')}
-      >
-        <Flex justify="space-between" align="center">
-          <Text fontSize="xl" fontWeight="bold">
-            Free ATS-Optimized Resume Generator
-          </Text>
-          <Flex gap={6} align="center">
-            {!isLoggedIn && (
-              <Flex gap={2}>
-                <Button
-                  size="sm"
-                  colorScheme="blue"
-                  onClick={() => {/* TODO: Open sign in modal */}}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  colorScheme="blue"
-                  onClick={() => {/* TODO: Open login modal */}}
-                >
-                  Register
-                </Button>
-              </Flex>
-            )}
-          </Flex>
-        </Flex>
-      </Box>
-
+      <Header />
       <Flex flex="1" overflow="hidden">
         {/* Sidebar - 30% width */}
         <Box
@@ -530,12 +504,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
               {/* Job description input area */}
               <Box p={4} borderTop="1px" borderColor={borderColor} bg={bgColor}>
                 <Flex gap={2}>
-                  <IconButton
-                    aria-label="Attach file"
-                    icon={<AttachmentIcon />}
-                    size="lg"
-                    variant="ghost"
-                  />
+                  <Tooltip 
+                    label="Attach cover letters"
+                    placement="top"
+                    hasArrow
+                  >
+                    <IconButton
+                      aria-label="Attach cover letter"
+                      icon={<AttachmentIcon />}
+                      size="lg"
+                      variant="ghost"
+                    />
+                  </Tooltip>
                   <Input
                     flex="1"
                     placeholder="Paste the job description"

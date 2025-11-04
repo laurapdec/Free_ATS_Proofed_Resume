@@ -1,12 +1,12 @@
 import { Box, Container, VStack, useToast } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import { ContactSection } from '../src/components/ContactSection';
-import { ExperienceSection } from '../src/components/ExperienceSection';
-import { EducationSection } from '../src/components/EducationSection';
-import { PublicationSection } from '../src/components/PublicationSection';
-import { SkillsSection } from '../src/components/SkillsSection';
-import { LanguageSection } from '../src/components/LanguageSection';
-import type { Resume, Experience, Education, Publication, Skill, Language } from '../types/resume';
+import { ContactSection } from './ContactSection';
+import { ExperienceSection } from './ExperienceSection';
+import { EducationSection } from './EducationSection';
+import { PublicationSection } from './PublicationSection';
+import { SkillsSection } from './SkillsSection';
+import { LanguageSection } from './LanguageSection';
+import type { Resume, Experience, Education, Publication, Skill, Language } from '../../types/resume';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/router';
 
