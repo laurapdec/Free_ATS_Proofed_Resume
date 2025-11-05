@@ -4,8 +4,12 @@ from typing import Optional, List
 import os
 
 # Database configuration
-DATABASE_URL = "sqlite:///./database.db"
-engine = create_engine(DATABASE_URL, echo=True)
+from app.core.config import settings
+
+database_url = settings.get_database_url()
+if not database_url.startswith('sqlite:'):
+    database_url = 'sqlite:///database.db'
+engine = create_engine(database_url, echo=True, connect_args={"check_same_thread": False})
 
 class Resume(SQLModel, table=True):
     __tablename__ = "resume"

@@ -23,7 +23,11 @@ class Settings(BaseSettings):
     linkedin_redirect_uri: str = "http://127.0.0.1:8000/api/v1/linkedin/callback"
     
     # Database
-    database_url: str = "postgresql://user:password@localhost:5432/ats_resume"
+    database_url: str = "sqlite:///database.db"
+
+    def get_database_url(self) -> str:
+        """Get the database URL."""
+        return self.database_url
     
     # Extra settings from environment
     debug: bool = False

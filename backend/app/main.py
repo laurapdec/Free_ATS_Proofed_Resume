@@ -14,11 +14,12 @@ app = FastAPI(
 # CORS middleware configuration - must be first!
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development only. In production, specify exact origins
-    allow_credentials=True,
+    allow_origins=["http://localhost:3000"],  # Development frontend URL
+    allow_credentials=False,  # Don't require credentials
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["Content-Disposition", "Content-Type"],
+    max_age=86400  # Cache preflight requests for 24 hours
 )
 
 # Add security middlewares after CORS

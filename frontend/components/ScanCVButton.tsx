@@ -34,16 +34,19 @@ export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
       const formData = new FormData();
       formData.append('file', file);
 
+      console.log('Uploading file:', file.name, file.type, file.size);
+
       const response = await fetch('/api/scan-cv', {
         method: 'POST',
         body: formData,
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to scan CV');
+        throw new Error(data.message || 'Failed to scan CV');
       }
 
-      const data = await response.json();
       toast({
         title: 'CV Scanned Successfully',
         description: 'Processing your CV...',
@@ -56,7 +59,7 @@ export const ScanCVButton = ({ onProfileLoaded }: ScanCVButtonProps) => {
       console.error('Error scanning CV:', error);
       toast({
         title: 'Error',
-        description: 'Failed to scan your CV. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to scan your CV. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,

@@ -3,8 +3,9 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { Box, IconButton, Flex, Text, useColorModeValue } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs/pdf.worker.min.js`;
+// Configure PDF.js worker - use CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
+console.log('PDF.js worker configured:', pdfjs.GlobalWorkerOptions.workerSrc);
 
 interface PDFViewerComponentProps {
   file: string;
@@ -16,6 +17,7 @@ const PDFViewerComponent: React.FC<PDFViewerComponentProps> = ({ file }) => {
   const [pageWidth, setPageWidth] = useState(600);
 
   useEffect(() => {
+    console.log('PDFViewerComponent received file:', file);
     setPageWidth(Math.min(600, window.innerWidth * 0.4));
     
     const handleResize = () => {
@@ -24,10 +26,15 @@ const PDFViewerComponent: React.FC<PDFViewerComponentProps> = ({ file }) => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [file]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+    console.log('PDF loaded successfully with', numPages, 'pages');
     setNumPages(numPages);
+  }
+
+  function onDocumentLoadError(error: Error) {
+    console.error('PDF load error:', error);
   }
 
   const goToPrevPage = () => {
@@ -53,6 +60,7 @@ const PDFViewerComponent: React.FC<PDFViewerComponentProps> = ({ file }) => {
       <Document
         file={file}
         onLoadSuccess={onDocumentLoadSuccess}
+        onLoadError={onDocumentLoadError}
         loading={
           <Box p={4}>
             <Text>Loading PDF...</Text>

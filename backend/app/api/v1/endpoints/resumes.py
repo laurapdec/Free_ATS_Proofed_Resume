@@ -9,10 +9,12 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.units import inch
 import os
 import shutil
+import traceback
 from datetime import datetime
 from sqlmodel import Session
 
 from app.db.models import Resume, CoverLetter, engine, get_session
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -53,7 +55,11 @@ async def upload_files(
     session: Session = Depends(get_session)
 ):
     """Upload resume and optional cover letter files."""
+    folder_path = None
     try:
+        print(f"Received upload request - name: {name}, email: {email}, role: {role}")
+        print(f"CV file: {cv.filename}, content_type: {cv.content_type}")
+        
         # Validate files
         validate_file(cv)
         if cover_letter:
@@ -64,12 +70,19 @@ async def upload_files(
         folder_name = f"{role}_{name.replace(' ', '_')}_{timestamp}"
         folder_path = os.path.join(UPLOAD_DIR, folder_name)
         os.makedirs(folder_path, exist_ok=True)
+        print(f"Created directory: {folder_path}")
 
         # Save resume
         cv_filename = f"CV_{os.path.basename(cv.filename)}"
         cv_path = os.path.join(folder_path, cv_filename)
+        
+        print(f"Saving CV to: {cv_path}")
+        contents = await cv.read()
         with open(cv_path, "wb") as f:
-            shutil.copyfileobj(cv.file, f)
+            f.write(contents)
+        
+        # Reset file pointer for potential reuse
+        await cv.seek(0)
 
         # Create resume record
         db_resume = Resume(
@@ -80,14 +93,17 @@ async def upload_files(
         )
         session.add(db_resume)
         session.flush()  # Get ID before commit
+        print(f"Created resume record with ID: {db_resume.id}")
 
         # Save cover letter if provided
         cl_path = None
         if cover_letter:
             cl_filename = f"CL_{os.path.basename(cover_letter.filename)}"
             cl_path = os.path.join(folder_path, cl_filename)
+            print(f"Saving cover letter to: {cl_path}")
+            cl_contents = await cover_letter.read()
             with open(cl_path, "wb") as f:
-                shutil.copyfileobj(cover_letter.file, f)
+                f.write(cl_contents)
             
             # Create cover letter record
             db_cover_letter = CoverLetter(
@@ -95,13 +111,16 @@ async def upload_files(
                 file_path=cl_path
             )
             session.add(db_cover_letter)
+            print(f"Created cover letter record for resume ID: {db_resume.id}")
 
         session.commit()
+        print("Database transaction committed successfully")
 
         return JSONResponse({
             "message": "Files uploaded successfully",
             "cv_path": cv_path,
-            "cover_letter_path": cl_path
+            "cover_letter_path": cl_path,
+            "resume_id": db_resume.id
         })
 
     except Exception as e:
@@ -110,105 +129,133 @@ async def upload_files(
             shutil.rmtree(folder_path, ignore_errors=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/generate-pdf", summary="Generate PDF from resume data")
-async def generate_pdf(resume_data: Dict[Any, Any]):
-    """Generate a PDF from the provided resume data."""
-    pdf_file = None
+@router.get("/resume/{resume_id}", summary="Get resume file by ID")
+async def get_resume_file(resume_id: int, session: Session = Depends(get_session)):
+    """Get the uploaded resume file by ID."""
     try:
-        # Create PDF in a temporary directory
-        pdf_dir = os.path.join(UPLOAD_DIR, "temp_pdfs")
-        if not os.path.exists(pdf_dir):
-            os.makedirs(pdf_dir, mode=0o755)
+        # Get the resume from the database
+        resume = session.get(Resume, resume_id)
+        if not resume:
+            raise HTTPException(status_code=404, detail="Resume not found")
         
-        # Create a unique filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        pdf_file = os.path.join(pdf_dir, f"resume_{timestamp}.pdf")
-        
-        # Create the PDF document
-        doc = SimpleDocTemplate(
-            pdf_file,
-            pagesize=letter,
-            rightMargin=72,
-            leftMargin=72,
-            topMargin=72,
-            bottomMargin=72
-        )
-
-        # Create styles
-        styles = {
-            'ContactInfo': ParagraphStyle(
-                'ContactInfo',
-                fontSize=12,
-                spaceAfter=20
-            ),
-            'Experience': ParagraphStyle(
-                'Experience',
-                fontSize=12,
-                spaceAfter=10
-            ),
-            'Description': ParagraphStyle(
-                'Description',
-                fontSize=10,
-                leftIndent=20,
-                spaceAfter=5
-            )
-        }
-
-        # Build the PDF content
-        story = []
-        
-        # Contact Information
-        if 'contactInfo' in resume_data:
-            contact = resume_data['contactInfo']
-            story.append(Paragraph(
-                f"{contact.get('email', '')}<br/>"
-                f"{contact.get('phone', '')}<br/>"
-                f"{contact.get('location', {}).get('city', '')}, "
-                f"{contact.get('location', {}).get('country', '')}",
-                styles['ContactInfo']
-            ))
-
-        # Experiences
-        if 'experiences' in resume_data:
-            for exp in resume_data['experiences']:
-                story.append(Paragraph(
-                    f"<b>{exp.get('title', '')}</b><br/>"
-                    f"{exp.get('company', '')}<br/>"
-                    f"{exp.get('location', '')}<br/>"
-                    f"{exp.get('startDate', '')} - {exp.get('endDate', '')}<br/>",
-                    styles['Experience']
-                ))
-                for desc in exp.get('description', []):
-                    story.append(Paragraph(desc, styles['Description']))
-
-        # Build the PDF
-        doc.build(story)
-
-        # Verify the file exists and is readable
-        if not os.path.exists(pdf_file):
-            raise HTTPException(status_code=500, detail="PDF file was not created successfully")
+        # Check if file exists
+        if not os.path.exists(resume.file_path):
+            raise HTTPException(status_code=404, detail="Resume file not found")
             
-        # Return the PDF file with appropriate headers
+        # Get file name from path
+        filename = os.path.basename(resume.file_path)
+        
+        # Determine content type based on file extension
+        content_type = 'application/pdf'  # Default to PDF
+        if filename.lower().endswith('.doc'):
+            content_type = 'application/msword'
+        elif filename.lower().endswith('.docx'):
+            content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            
+        # Return the file
         headers = {
-            'Content-Disposition': 'inline; filename="resume.pdf"',
+            'Content-Disposition': f'inline; filename="{filename}"',
             'Access-Control-Expose-Headers': 'Content-Disposition',
             'Access-Control-Allow-Origin': '*',
             'Cache-Control': 'public, max-age=3600'
         }
         
         return FileResponse(
-            path=pdf_file,
-            media_type='application/pdf',
-            filename='resume.pdf',
-            headers=headers,
-            background=None  # Prevent background task from deleting the file
+            path=resume.file_path,
+            media_type=content_type,
+            filename=filename,
+            headers=headers
         )
 
     except Exception as e:
-        # Clean up on error
-        if pdf_file and os.path.exists(pdf_file):
-            try:
-                os.unlink(pdf_file)
-            except:
-                pass
         raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi.responses import JSONResponse
+from app.core.config import settings
+
+@router.options("/generate-pdf")
+async def options_latest_resume():
+    """Handle OPTIONS request for CORS."""
+    response = Response()
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
+@router.get("/generate-pdf", summary="Get the most recently uploaded resume")
+async def get_latest_resume(session: Session = Depends(get_session)):
+    """Get the ID of the most recently uploaded resume."""
+    try:
+        print("Attempting to get latest resume...")
+        # Get the most recent resume from the database
+        resume = session.query(Resume).order_by(Resume.uploaded_at.desc()).first()
+        
+        if not resume:
+            print("No resumes found in database")
+            raise HTTPException(status_code=404, detail="No resumes found")
+        
+        print(f"Found resume with ID: {resume.id}")
+        content = {"resume_id": resume.id}
+        response = JSONResponse(content=content)
+        
+        # Add CORS headers
+        response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        
+        print(f"Returning response with resume ID: {resume.id}")
+        return response
+        
+    except Exception as e:
+        print(f"Error in get_latest_resume: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving resume: {str(e)}")
+        
+        print(f"Found resume with path: {resume.file_path}")
+        
+        # Check if file exists
+        if not os.path.exists(resume.file_path):
+            print(f"File not found at path: {resume.file_path}")
+            print(f"Current working directory: {os.getcwd()}")
+            print(f"UPLOAD_DIR: {UPLOAD_DIR}")
+            raise HTTPException(status_code=404, detail=f"Resume file not found at {resume.file_path}")
+            
+        # Get file name from path
+        filename = os.path.basename(resume.file_path)
+        print(f"Filename: {filename}")
+        
+        # Determine content type based on file extension
+        content_type = 'application/pdf'  # Default to PDF
+        if filename.lower().endswith('.doc'):
+            content_type = 'application/msword'
+        elif filename.lower().endswith('.docx'):
+            content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            
+        print(f"Content type: {content_type}")
+            
+        from app.core.config import settings
+
+        # Return the file
+        headers = {
+            'Content-Disposition': f'inline; filename="{filename}"',
+            'Access-Control-Expose-Headers': 'Content-Disposition',
+            'Access-Control-Allow-Origin': settings.frontend_url,
+            'Access-Control-Allow-Credentials': 'false',
+            'Cache-Control': 'no-cache'  # Prevent caching issues
+        }
+        
+        print(f"Attempting to return file: {resume.file_path}")
+        
+        response = FileResponse(
+            path=resume.file_path,
+            media_type='application/pdf',  # Always serve as PDF
+            filename=filename,
+            headers=headers
+        )
+
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in get_latest_resume: {str(e)}")
+        print(f"Traceback: {error_trace}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving resume: {str(e)}")

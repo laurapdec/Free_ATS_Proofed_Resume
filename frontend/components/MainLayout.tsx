@@ -34,9 +34,11 @@ const DonutChart: React.FC<DonutChartProps> = ({ percentage, size = 60, strokeWi
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
   
-  const greenColor = useColorModeValue('#48BB78', '#68D391'); // green.500, green.300
-  const blueColor = useColorModeValue('#4299E1', '#63B3ED'); // blue.500, blue.300
-  const orangeColor = useColorModeValue('#ED8936', '#F6AD55'); // orange.500, orange.300
+  // Individual color hooks
+  const greenColor = useColorModeValue('#48BB78', '#68D391');
+  const blueColor = useColorModeValue('#4299E1', '#63B3ED');
+  const orangeColor = useColorModeValue('#ED8936', '#F6AD55');
+  const bgColor = useColorModeValue('#EDF2F7', '#2D3748');
   
   const getColor = (score: number) => {
     if (score >= 90) return greenColor;
@@ -53,7 +55,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ percentage, size = 60, strokeWi
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={useColorModeValue('#EDF2F7', '#2D3748')}
+          stroke={bgColor}
           strokeWidth={strokeWidth}
         />
         {/* Score circle */}
@@ -123,12 +125,18 @@ const EyeIcon: React.FC = () => (
 import { useRouter } from 'next/router';
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element => {
-  // Context hooks must come first and in the same order every time
+  // All hooks must be called at the top level and in the same order
   const router = useRouter();
-  
-  // Use custom theme hook to ensure consistent order
   const theme = useMainLayoutTheme();
   const toast = useToast();
+  
+  // Theme colors that might be needed throughout the component
+  const whiteColor = useColorModeValue('white', 'gray.700');
+  const grayColor = useColorModeValue('gray.50', 'gray.700');
+  const grayTextColor = useColorModeValue('gray.600', 'gray.400');
+  const blueHighlightBg = useColorModeValue('blue.50', 'blue.900');
+  const blueHighlightText = useColorModeValue('blue.600', 'blue.200');
+  const blueSecondaryText = useColorModeValue('blue.500', 'blue.300');
 
   // State hooks
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -220,6 +228,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
     document.addEventListener('mouseup', handleMouseUp);
   }, [splitPosition]);
 
+  // Get color mode values at the top level
+  const colors = {
+    white: useColorModeValue('white', 'gray.700'),
+    gray: useColorModeValue('gray.50', 'gray.700'),
+    grayText: useColorModeValue('gray.600', 'gray.400'),
+    blueHighlight: useColorModeValue('blue.50', 'blue.900'),
+    blueText: useColorModeValue('blue.600', 'blue.200'),
+    blueSecondary: useColorModeValue('blue.500', 'blue.300'),
+    darkWhite: useColorModeValue('white', 'gray.600'),
+    coverLetterBg: useColorModeValue('white', 'gray.600'),
+    coverLetterText: useColorModeValue('gray.600', 'gray.400'),
+    resizerHover: useColorModeValue('blue.100', 'blue.700')
+  };
+  
   const renderSidebar = () => {
     return (
       <VStack spacing={4} w="full" p={4}>
@@ -331,12 +353,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                   py={3}
                   px={4}
                   borderRadius="lg"
-                  bg={useColorModeValue('blue.50', 'blue.900')}
+                  bg={colors.blueHighlight}
                 >
-                  <Text textAlign="center" fontSize="lg" fontWeight="bold" color={useColorModeValue('blue.600', 'blue.200')}>
+                  <Text textAlign="center" fontSize="lg" fontWeight="bold" color={colors.blueText}>
                     100% Free ATS-Proofed CV
                   </Text>
-                  <Text textAlign="center" fontSize="sm" color={useColorModeValue('blue.500', 'blue.300')}>
+                  <Text textAlign="center" fontSize="sm" color={colors.blueSecondary}>
                     No hidden costs or catches
                   </Text>
                 </Box>
@@ -348,13 +370,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                       h="200px"
                       borderRadius="md"
                       border="1px"
-                      borderColor={borderColor}
+                      borderColor={theme.borderColor}
                       p={4}
                       display="flex"
                       flexDirection="column"
                       alignItems="center"
                       justifyContent="space-between"
-                      bg={useColorModeValue('white', 'gray.600')}
+                      bg={colors.darkWhite}
                       onClick={() => isLoggedIn && setIsCoverLetterModalOpen(true)}
                       transition="transform 0.2s"
                       _hover={{ transform: isLoggedIn ? 'scale(1.05)' : 'none' }}
@@ -371,7 +393,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                               Google
                             </Text>
                           </Flex>
-                          <Text  ml={1.5} w="100%" fontSize="xs"  textAlign="center" color={useColorModeValue('gray.600', 'gray.400')} mt={0.5}>
+                          <Text  ml={1.5} w="100%" fontSize="xs"  textAlign="center" color={colors.grayText} mt={0.5}>
                             Software Engineer - ML Platform
                           </Text>
                         </Box>
@@ -381,11 +403,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                         <Flex gap={4} alignItems="center" mt={0.2}>
                           <VStack spacing={0.5}>
                             <DonutChart percentage={88} size={34} strokeWidth={3} />
-                            <Text fontSize="2xs" color={useColorModeValue('gray.600', 'gray.400')}>CV</Text>
+                            <Text fontSize="2xs" color={colors.grayText}>CV</Text>
                           </VStack>
                           <VStack spacing={0.5}>
                             <DonutChart percentage={86} size={34} strokeWidth={3} />
-                            <Text fontSize="2xs" color={useColorModeValue('gray.600', 'gray.400')}>CL</Text>
+                            <Text fontSize="2xs" color={colors.grayText}>CL</Text>
                           </VStack>
                         </Flex>
   
@@ -410,13 +432,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                       h="200px"
                       borderRadius="md"
                       border="1px"
-                      borderColor={borderColor}
+                      borderColor={theme.borderColor}
                       p={4}
                       display="flex"
                       flexDirection="column"
                       alignItems="center"
                       justifyContent="space-between"
-                      bg={useColorModeValue('white', 'gray.600')}
+                      bg={colors.coverLetterBg}
                       onClick={() => {
                         if (isLoggedIn) {
                           setIsGeneratingCoverLetter(true);
@@ -438,7 +460,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                               Apple
                             </Text>
                           </Flex>
-                          <Text  ml={1.5} w="100%" fontSize="xs"  textAlign="center" color={useColorModeValue('gray.600', 'gray.400')} mt={0.5}>
+                          <Text  ml={1.5} w="100%" fontSize="xs"  textAlign="center" color={colors.coverLetterText} mt={0.5}>
                             Senior Product Designer
                           </Text>
                         </Box>
@@ -448,11 +470,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                         <Flex gap={4} alignItems="center" mt={0.2}>
                           <VStack spacing={0.5}>
                             <DonutChart percentage={88} size={34} strokeWidth={3} />
-                            <Text fontSize="2xs" color={useColorModeValue('gray.600', 'gray.400')}>CV</Text>
+                            <Text fontSize="2xs" color={colors.coverLetterText}>CV</Text>
                           </VStack>
                           <VStack spacing={0.5}>
                             <DonutChart percentage={92} size={34} strokeWidth={3} />
-                            <Text fontSize="2xs" color={useColorModeValue('gray.600', 'gray.400')}>CL</Text>
+                            <Text fontSize="2xs" color={colors.coverLetterText}>CL</Text>
                           </VStack>
                         </Flex>
                       </Box>
@@ -531,8 +553,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 w={resumes.length ? `${splitPosition}%` : "0"}
                 transition="width 0.2s"
                 borderRight="1px"
-                borderColor={borderColor}
-                bg={bgColor}
+                borderColor={theme.borderColor}
+                bg={theme.bgColor}
                 overflowY="auto"
                 position="relative"
               >
@@ -547,12 +569,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                             h="full"
                             alignItems="center"
                             justifyContent="center"
-                            bg={useColorModeValue('white', 'gray.700')}
+                            bg={colors.white}
                             borderRadius="md"
                             p={4}
                             borderWidth="2px"
                             borderStyle="dashed"
-                            borderColor={borderColor}
+                            borderColor={theme.borderColor}
                           >
                             <Text color="gray.500">
                               Your resume preview will appear here
@@ -580,11 +602,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                   {resumes.length > 0 && !hasInitialPrompt && (
                     <Box 
                       p={4} 
-                      bg={useColorModeValue('blue.50', 'blue.900')} 
+                      bg={colors.blueHighlight} 
                       borderRadius="lg"
                       mb={4}
                     >
-                      <Text fontWeight="medium" color={useColorModeValue('blue.600', 'blue.200')}>
+                      <Text fontWeight="medium" color={colors.blueText}>
                         I'm analyzing your resume... This will just take a moment.
                       </Text>
                     </Box>
@@ -595,13 +617,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                       mb={4}
                       p={4}
                       bg={message.role === 'assistant' 
-                        ? useColorModeValue('blue.50', 'blue.900')
-                        : useColorModeValue('gray.50', 'gray.700')}
+                        ? colors.blueHighlight
+                        : colors.gray}
                       borderRadius="lg"
                     >
                       <Text
                         color={message.role === 'assistant'
-                          ? useColorModeValue('blue.600', 'blue.200')
+                          ? colors.blueText
                           : 'inherit'}
                       >
                         {message.content}
@@ -674,7 +696,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 transform="translateX(-50%)"
                 cursor="col-resize"
                 bg="transparent"
-                _hover={{ bg: useColorModeValue('blue.100', 'blue.700') }}
+                _hover={{ bg: colors.resizerHover }}
                 transition="background-color 0.2s"
                 onMouseDown={handleMouseDown}
                 userSelect="none"
