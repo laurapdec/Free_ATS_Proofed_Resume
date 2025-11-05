@@ -11,6 +11,7 @@ import type { Resume } from '../types/resume';
 import { isValidResume } from '../utils/validation';
 import { generatePDF } from '../utils/api';
 import { Header } from './Header';
+import ReactMarkdown from 'react-markdown';
 
 interface MainLayoutProps {
   children?: React.ReactNode;
@@ -191,24 +192,34 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
   // Send analysis message after PDF is reviewed
   useEffect(() => {
     if (isPdfReviewed && !hasSentAnalysisMessage && resumes.length > 0) {
-      const analysisMessage = `🎉 Your resume has been analyzed and optimized!
+      const analysisMessage = `**Your resume has been analyzed and optimized!**
 
-**ATS Score: ${calculateATSScore(resumes[0])}%**
+---
+
+## 📊 **ATS Score: 0%**
 
 I've processed your resume data and created an ATS-optimized PDF. Here's what I found:
 
-**✅ Resume Analysis Complete**
-- Contact information: ${resumes[0].contactInfo?.email ? 'Complete' : 'Missing email'}
-- Skills: ${resumes[0].skills?.length || 0} skills identified
-- Experience: ${resumes[0].experiences?.length || 0} positions
-- Education: ${resumes[0].education?.length || 0} degrees
+---
 
-**🚀 Ready for Job Applications**
+## ✅ **Resume Analysis Complete**
+
+- **Contact information:** Missing email
+- **Skills:** 0 skills identified
+- **Experience:** 0 positions
+- **Education:** 0 degrees
+
+---
+
+## 🚀 **Ready for Job Applications**
 
 To optimize your resume for specific jobs, please share:
-1. **Job Description**: Paste the job posting or attach it
-2. **Cover Letter**: Upload your cover letter (optional)
-3. **Target Position**: Tell me about the role you're applying for
+
+1. **📋 Job Description** - Paste the job posting or attach it
+2. **📄 Cover Letter** - Upload your cover letter (optional)
+3. **🎯 Target Position** - Tell me about the role you're applying for
+
+---
 
 I can then tailor your resume and generate customized application materials!`;
 
@@ -733,25 +744,6 @@ I can then tailor your resume and generate customized application materials!`;
               </Box>
             </VStack>
 
-            {/* Sign In Prompt - only show if not logged in */}
-            {!isLoggedIn && (
-              <VStack spacing={4} w="full" pt={4}>
-                <Divider />
-                <Text fontSize="sm" color="gray.600" textAlign="center">
-                  Want to save your resume and access premium features?
-                </Text>
-                <Button
-                  as="a"
-                  href="/signin"
-                  colorScheme="blue"
-                  variant="solid"
-                  size="sm"
-                  w="full"
-                >
-                  Sign In / Register
-                </Button>
-              </VStack>
-            )}
           </VStack>
         ) : (
           <VStack spacing={4} w="full">
@@ -1590,41 +1582,32 @@ I can then tailor your resume and generate customized application materials!`;
           <VStack spacing={4} w="full" pt={4}>
             <Divider />
             <Text fontSize="sm" color="gray.600" textAlign="center">
-              Enjoying the free service? Consider supporting us!
+              {isLoggedIn ? (
+                "Enjoying the free service? Consider supporting us!"
+              ) : (
+                <>
+                  <Link href="/signin" passHref>
+                    <Button
+                      variant="link"
+                      color="blue.500"
+                      fontWeight="medium"
+                    >
+                      Sign in
+                    </Button>
+                  </Link>
+                  {" "}
+                  to unlock all premium features and support us!
+                </>
+              )}
             </Text>
-            <Button
-              as="a"
-              href="https://www.buymeacoffee.com/atsproofedcv"
-              target="_blank"
-              rel="noopener noreferrer"
-              colorScheme="orange"
-              variant="outline"
-              size="sm"
-              leftIcon={<StarIcon />}
-              w="full"
-            >
-              Buy Me a Coffee
-            </Button>
-
-            {/* Sign In Prompt - only show if not logged in */}
-            {!isLoggedIn && (
-              <VStack spacing={4} w="full" pt={4}>
-                <Divider />
-                <Text fontSize="sm" color="gray.600" textAlign="center">
-                  Want to save your resume and access premium features?
-                </Text>
-                <Button
-                  as="a"
-                  href="/signin"
-                  colorScheme="blue"
-                  variant="solid"
-                  size="sm"
-                  w="full"
-                >
-                  Sign In / Register
-                </Button>
-              </VStack>
-            )}
+            <Box as="a" href="https://www.buymeacoffee.com/atsproofedcv" target="_blank" rel="noopener noreferrer">
+              <Image
+                src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+                alt="Buy Me A Coffee"
+                height="30px"
+                width="108.5px"
+              />
+            </Box>
           </VStack>
         )}
         
@@ -1777,15 +1760,57 @@ I can then tailor your resume and generate customized application materials!`;
                           borderTop: `8px solid ${message.role === 'assistant' ? colors.blueHighlight : colors.blueSecondary}`,
                         }}
                       >
-                        <Text
-                          color={message.role === 'assistant'
-                            ? colors.blueText
-                            : 'white'}
-                          fontSize="sm"
-                          lineHeight="1.4"
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <Text
+                                color={message.role === 'assistant'
+                                  ? colors.blueText
+                                  : 'white'}
+                                fontSize="sm"
+                                lineHeight="1.4"
+                                mb={2}
+                              >
+                                {children}
+                              </Text>
+                            ),
+                            strong: ({ children }) => (
+                              <Text as="strong" fontWeight="bold">
+                                {children}
+                              </Text>
+                            ),
+                            h1: ({ children }) => (
+                              <Text fontSize="lg" fontWeight="bold" mb={2}>
+                                {children}
+                              </Text>
+                            ),
+                            h2: ({ children }) => (
+                              <Text fontSize="md" fontWeight="bold" mb={2}>
+                                {children}
+                              </Text>
+                            ),
+                            h3: ({ children }) => (
+                              <Text fontSize="sm" fontWeight="bold" mb={1}>
+                                {children}
+                              </Text>
+                            ),
+                            ul: ({ children }) => (
+                              <VStack align="start" spacing={1} mb={2}>
+                                {children}
+                              </VStack>
+                            ),
+                            li: ({ children }) => (
+                              <Text fontSize="sm" lineHeight="1.4" pl={2}>
+                                • {children}
+                              </Text>
+                            ),
+                            hr: () => (
+                              <Divider my={3} />
+                            ),
+                          }}
                         >
                           {message.content}
-                        </Text>
+                        </ReactMarkdown>
                       </Box>
                     </Flex>
                   ))}
