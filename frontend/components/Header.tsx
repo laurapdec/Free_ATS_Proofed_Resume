@@ -49,6 +49,14 @@ export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
           <Flex gap={6} align="center">
             {isLoggedIn ? (
               <Flex gap={3}>
+                <Link href="/" passHref>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                  >
+                    Home
+                  </Button>
+                </Link>
                 <Link href="/account" passHref>
                   <Button
                     size="sm"

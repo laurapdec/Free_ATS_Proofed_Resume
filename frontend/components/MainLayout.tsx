@@ -7,6 +7,7 @@ import { LinkedInSignIn } from './LinkedInSignIn';
 import { ScanCVButton } from './ScanCVButton';
 import { CoverLetterModal } from './CoverLetterModal';
 import PDFViewer from './PDFViewer';
+import TabbedPDFViewer from './TabbedPDFViewer';
 import type { Resume } from '../types/resume';
 import { isValidResume } from '../utils/validation';
 import { generatePDF } from '../utils/api';
@@ -172,11 +173,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
     companyLogo?: string;
   } | null>(null);
 
-  // Cover letter file input ref
-  const coverLetterFileInputRef = useRef<HTMLInputElement>(null);
+  // PDF viewer tab state
+  const [activePdfTab, setActivePdfTab] = useState<'resume' | 'coverLetter'>('resume');
 
   // Chat scroll ref
   const chatMessagesRef = useRef<HTMLDivElement>(null);
+
+  // Cover letter file input ref
+  const coverLetterFileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle PDF generation and review
   useEffect(() => {
@@ -422,6 +426,12 @@ I can then tailor your resume and generate customized application materials!`;
       }
 
       const data = await response.json();
+
+      // Check if user mentioned cover letter to switch tabs
+      const messageLower = message.toLowerCase();
+      if (messageLower.includes('cover letter') || messageLower.includes('cover-letter')) {
+        setActivePdfTab('coverLetter');
+      }
 
       // Add user message and AI response to chat
       setMessages(prev => [...prev,
@@ -1653,8 +1663,13 @@ I can then tailor your resume and generate customized application materials!`;
                   <>
                     <Box p={0} h="full">
                       <Box h="full">
-                        {currentPdfUrl ? (
-                          <PDFViewer file={currentPdfUrl} />
+                        {currentPdfUrl || coverLetterPdfUrl ? (
+                          <TabbedPDFViewer 
+                            resumeFile={currentPdfUrl || undefined}
+                            coverLetterFile={coverLetterPdfUrl || undefined}
+                            activeTab={activePdfTab}
+                            onTabChange={setActivePdfTab}
+                          />
                         ) : (
                           <Flex
                             h="full"

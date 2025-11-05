@@ -12,12 +12,11 @@ import string
 import random
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+from sqlmodel import Session, select
+from app.db.models import User, get_session
 
 router = APIRouter()
 security = HTTPBearer()
-
-# Mock user database - replace with real database in production
-users_db = {}
 
 # Mock password reset tokens - replace with database in production
 reset_tokens = {}
@@ -113,7 +112,7 @@ def send_password_reset_email(email: str, reset_code: str):
         print(f"Error sending email: {e}")
         return False
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), session: Session = Depends(get_session)):
     try:
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
@@ -122,161 +121,189 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
-    user = users_db.get(user_id)
+    user = session.get(User, int(user_id))
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
 
 @router.post("/register", response_model=dict)
-async def register(user_data: UserCreate):
+async def register(user_data: UserCreate, session: Session = Depends(get_session)):
     # Check if user already exists
-    for user in users_db.values():
-        if user["email"] == user_data.email:
-            raise HTTPException(status_code=400, detail="Email already registered")
+    existing_user = session.exec(select(User).where(User.email == user_data.email)).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     # Create new user
-    user_id = str(len(users_db) + 1)
     hashed_password = get_password_hash(user_data.password)
 
-    user = {
-        "id": user_id,
-        "email": user_data.email,
-        "firstName": user_data.firstName,
-        "lastName": user_data.lastName,
-        "password": hashed_password,
-        "avatar": None,
-        "createdAt": datetime.utcnow().isoformat(),
-        "subscription": {
-            "plan": "free",
-            "status": "active",
-            "resumesUsed": 0,
-            "resumesLimit": 5
-        },
-        "preferences": {
-            "emailNotifications": True,
-            "jobAlerts": True,
-            "weeklyReports": False
-        }
-    }
+    user = User(
+        email=user_data.email,
+        first_name=user_data.firstName,
+        last_name=user_data.lastName,
+        password_hash=hashed_password,
+        subscription_plan="free",
+        subscription_status="active",
+        resumes_used=0,
+        resumes_limit=5,
+        email_notifications=True,
+        job_alerts=True,
+        weekly_reports=False
+    )
 
-    users_db[user_id] = user
+    session.add(user)
+    session.commit()
+    session.refresh(user)
 
     # Create access token
-    access_token = create_access_token(data={"sub": user_id})
+    access_token = create_access_token(data={"sub": str(user.id)})
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "id": user["id"],
-            "email": user["email"],
-            "firstName": user["firstName"],
-            "lastName": user["lastName"],
-            "subscription": user["subscription"],
-            "preferences": user["preferences"]
+            "id": str(user.id),
+            "email": user.email,
+            "firstName": user.first_name,
+            "lastName": user.last_name,
+            "subscription": {
+                "plan": user.subscription_plan,
+                "status": user.subscription_status,
+                "resumesUsed": user.resumes_used,
+                "resumesLimit": user.resumes_limit
+            },
+            "preferences": {
+                "emailNotifications": user.email_notifications,
+                "jobAlerts": user.job_alerts,
+                "weeklyReports": user.weekly_reports
+            }
         }
     }
 
 @router.post("/login", response_model=dict)
-async def login(user_data: UserLogin):
+async def login(user_data: UserLogin, session: Session = Depends(get_session)):
     # Find user by email
-    user = None
-    user_id = None
-    for uid, u in users_db.items():
-        if u["email"] == user_data.email:
-            user = u
-            user_id = uid
-            break
+    user = session.exec(select(User).where(User.email == user_data.email)).first()
 
-    if not user or not verify_password(user_data.password, user["password"]):
+    if not user or not verify_password(user_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     # Create access token
-    access_token = create_access_token(data={"sub": user_id})
+    access_token = create_access_token(data={"sub": str(user.id)})
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "id": user["id"],
-            "email": user["email"],
-            "firstName": user["firstName"],
-            "lastName": user["lastName"],
-            "subscription": user["subscription"],
-            "preferences": user["preferences"]
+            "id": str(user.id),
+            "email": user.email,
+            "firstName": user.first_name,
+            "lastName": user.last_name,
+            "subscription": {
+                "plan": user.subscription_plan,
+                "status": user.subscription_status,
+                "resumesUsed": user.resumes_used,
+                "resumesLimit": user.resumes_limit
+            },
+            "preferences": {
+                "emailNotifications": user.email_notifications,
+                "jobAlerts": user.job_alerts,
+                "weeklyReports": user.weekly_reports
+            }
         }
     }
 
 @router.get("/profile", response_model=UserProfile)
-async def get_profile(current_user: dict = Depends(get_current_user)):
+async def get_profile(current_user: User = Depends(get_current_user)):
     return UserProfile(
-        id=current_user["id"],
-        email=current_user["email"],
-        firstName=current_user["firstName"],
-        lastName=current_user["lastName"],
-        avatar=current_user.get("avatar"),
-        createdAt=current_user["createdAt"],
-        subscription=current_user["subscription"],
-        preferences=UserPreferences(**current_user["preferences"])
+        id=str(current_user.id),
+        email=current_user.email,
+        firstName=current_user.first_name,
+        lastName=current_user.last_name,
+        avatar=current_user.avatar_url,
+        createdAt=current_user.created_at.isoformat(),
+        subscription={
+            "plan": current_user.subscription_plan,
+            "status": current_user.subscription_status,
+            "resumesUsed": current_user.resumes_used,
+            "resumesLimit": current_user.resumes_limit
+        },
+        preferences=UserPreferences(
+            emailNotifications=current_user.email_notifications,
+            jobAlerts=current_user.job_alerts,
+            weeklyReports=current_user.weekly_reports
+        )
     )
 
 @router.put("/profile", response_model=UserProfile)
 async def update_profile(
     user_data: UserUpdate,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
 ):
     # Update user data
     if user_data.firstName is not None:
-        current_user["firstName"] = user_data.firstName
+        current_user.first_name = user_data.firstName
     if user_data.lastName is not None:
-        current_user["lastName"] = user_data.lastName
+        current_user.last_name = user_data.lastName
     if user_data.email is not None:
         # Check if email is already taken by another user
-        for uid, u in users_db.items():
-            if u["email"] == user_data.email and uid != current_user["id"]:
-                raise HTTPException(status_code=400, detail="Email already in use")
-        current_user["email"] = user_data.email
+        existing_user = session.exec(select(User).where(User.email == user_data.email, User.id != current_user.id)).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already in use")
+        current_user.email = user_data.email
+
+    current_user.updated_at = datetime.utcnow()
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
 
     return UserProfile(
-        id=current_user["id"],
-        email=current_user["email"],
-        firstName=current_user["firstName"],
-        lastName=current_user["lastName"],
-        avatar=current_user.get("avatar"),
-        createdAt=current_user["createdAt"],
-        subscription=current_user["subscription"],
-        preferences=UserPreferences(**current_user["preferences"])
+        id=str(current_user.id),
+        email=current_user.email,
+        firstName=current_user.first_name,
+        lastName=current_user.last_name,
+        avatar=current_user.avatar_url,
+        createdAt=current_user.created_at.isoformat(),
+        subscription={
+            "plan": current_user.subscription_plan,
+            "status": current_user.subscription_status,
+            "resumesUsed": current_user.resumes_used,
+            "resumesLimit": current_user.resumes_limit
+        },
+        preferences=UserPreferences(
+            emailNotifications=current_user.email_notifications,
+            jobAlerts=current_user.job_alerts,
+            weeklyReports=current_user.weekly_reports
+        )
     )
 
 @router.post("/change-password")
 async def change_password(
     password_data: PasswordChange,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
 ):
     # Verify current password
-    if not verify_password(password_data.currentPassword, current_user["password"]):
+    if not verify_password(password_data.currentPassword, current_user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
     # Update password
-    current_user["password"] = get_password_hash(password_data.newPassword)
+    current_user.password_hash = get_password_hash(password_data.newPassword)
+    current_user.updated_at = datetime.utcnow()
+    session.add(current_user)
+    session.commit()
 
     return {"message": "Password changed successfully"}
 
 @router.post("/forgot-password")
-async def forgot_password(email_data: dict):
+async def forgot_password(email_data: dict, session: Session = Depends(get_session)):
     email = email_data.get("email")
     if not email:
         raise HTTPException(status_code=400, detail="Email is required")
 
     # Find user by email
-    user = None
-    user_id = None
-    for uid, u in users_db.items():
-        if u["email"] == email:
-            user = u
-            user_id = uid
-            break
+    user = session.exec(select(User).where(User.email == email)).first()
 
     if not user:
         # Don't reveal if email exists or not for security
@@ -288,7 +315,7 @@ async def forgot_password(email_data: dict):
 
     # Store reset code (in production, use database)
     reset_tokens[reset_code] = {
-        "user_id": user_id,
+        "user_id": user.id,
         "email": email,
         "expires_at": expiration_time.isoformat()
     }
@@ -303,7 +330,7 @@ async def forgot_password(email_data: dict):
     return {"message": "If an account with this email exists, a password reset code has been sent."}
 
 @router.post("/reset-password")
-async def reset_password(reset_data: dict):
+async def reset_password(reset_data: dict, session: Session = Depends(get_session)):
     code = reset_data.get("code")
     new_password = reset_data.get("new_password")
 
@@ -324,11 +351,14 @@ async def reset_password(reset_data: dict):
 
     # Update user password
     user_id = code_data["user_id"]
-    user = users_db.get(user_id)
+    user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
 
-    user["password"] = get_password_hash(new_password)
+    user.password_hash = get_password_hash(new_password)
+    user.updated_at = datetime.utcnow()
+    session.add(user)
+    session.commit()
 
     # Clean up used code
     del reset_tokens[code]

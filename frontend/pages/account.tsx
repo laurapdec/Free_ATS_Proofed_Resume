@@ -36,6 +36,7 @@ import {
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import { Header } from '../components/Header';
 import { EditIcon, EmailIcon, LockIcon, BellIcon, SettingsIcon, DownloadIcon } from '@chakra-ui/icons';
 
@@ -55,8 +56,6 @@ interface UserProfile {
   };
   preferences: {
     emailNotifications: boolean;
-    jobAlerts: boolean;
-    weeklyReports: boolean;
   };
 }
 
@@ -255,14 +254,18 @@ export default function Account() {
 
   return (
     <Box minH="100vh" bg={bgColor}>
+      <Head>
+        <title>Extensions & Integrations - ATS Resume</title>
+        <meta name="description" content="Manage your extensions and integrations to enhance your resume building experience" />
+      </Head>
       <Header isLoggedIn={true} setIsLoggedIn={() => {}} />
       <Container maxW="container.lg" py={8}>
         <VStack spacing={8} align="stretch">
           {/* Header */}
           <HStack justify="space-between" align="center">
             <VStack align="start" spacing={1}>
-              <Heading size="lg">Account Settings</Heading>
-              <Text color="gray.600">Manage your account and preferences</Text>
+              <Heading size="lg">Extensions & Integrations</Heading>
+              <Text color="gray.600">Manage your extensions and enhance your resume building experience</Text>
             </VStack>
             <Badge
               colorScheme={user.subscription.plan === 'premium' ? 'blue' : 'gray'}
@@ -279,7 +282,7 @@ export default function Account() {
               <Tab>Profile</Tab>
               <Tab>Security</Tab>
               <Tab>Preferences</Tab>
-              <Tab>Subscription</Tab>
+              <Tab>Extensions</Tab>
             </TabList>
 
             <TabPanels>
@@ -424,108 +427,111 @@ export default function Account() {
                           onChange={(e) => handlePreferenceChange('emailNotifications', e.target.checked)}
                         />
                       </HStack>
-                      <Divider />
-                      <HStack justify="space-between">
-                        <VStack align="start" spacing={1}>
-                          <Text fontWeight="medium">Job Alerts</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            Get notified when new jobs match your profile
-                          </Text>
-                        </VStack>
-                        <Switch
-                          colorScheme="blue"
-                          isChecked={user.preferences.jobAlerts}
-                          onChange={(e) => handlePreferenceChange('jobAlerts', e.target.checked)}
-                        />
-                      </HStack>
-                      <Divider />
-                      <HStack justify="space-between">
-                        <VStack align="start" spacing={1}>
-                          <Text fontWeight="medium">Weekly Reports</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            Receive weekly summaries of your job search activity
-                          </Text>
-                        </VStack>
-                        <Switch
-                          colorScheme="blue"
-                          isChecked={user.preferences.weeklyReports}
-                          onChange={(e) => handlePreferenceChange('weeklyReports', e.target.checked)}
-                        />
-                      </HStack>
                     </VStack>
                   </CardBody>
                 </Card>
               </TabPanel>
 
-              {/* Subscription Tab */}
+              {/* Extensions Tab */}
               <TabPanel>
                 <VStack spacing={6} align="stretch">
                   <Card bg={cardBg} borderColor={borderColor}>
                     <CardHeader>
                       <HStack justify="space-between">
-                        <Heading size="md">Current Plan</Heading>
-                        <Badge
-                          colorScheme={user.subscription.plan === 'premium' ? 'blue' : 'gray'}
-                          fontSize="sm"
-                        >
-                          {user.subscription.plan === 'premium' ? 'Premium' : 'Free'}
+                        <Heading size="md">Available Extensions</Heading>
+                        <Badge colorScheme="blue" fontSize="sm">
+                          {user.subscription.plan === 'premium' ? 'Premium Access' : 'Limited Access'}
                         </Badge>
                       </HStack>
                     </CardHeader>
                     <CardBody>
+                      <Text color="gray.600" mb={4}>
+                        Enhance your resume building experience with powerful extensions and integrations.
+                      </Text>
                       <VStack spacing={4} align="stretch">
-                        <HStack justify="space-between">
-                          <Text>Resume Optimizations Used</Text>
-                          <Text fontWeight="medium">
-                            {user.subscription.resumesUsed} / {user.subscription.resumesLimit}
-                          </Text>
-                        </HStack>
-                        <Progress
-                          value={(user.subscription.resumesUsed / user.subscription.resumesLimit) * 100}
-                          colorScheme="blue"
-                          size="sm"
-                        />
-                        {user.subscription.plan === 'free' && (
-                          <Alert status="info" borderRadius="md">
-                            <AlertIcon />
-                            <Box>
-                              <AlertTitle>Upgrade to Premium!</AlertTitle>
-                              <AlertDescription>
-                                Get unlimited resume optimizations, cover letter generation, and priority support.
-                              </AlertDescription>
-                            </Box>
-                          </Alert>
-                        )}
+                        {/* LinkedIn Integration Extension */}
+                        <Card bg={useColorModeValue('gray.50', 'gray.700')} borderColor={borderColor}>
+                          <CardBody>
+                            <HStack justify="space-between" align="start">
+                              <VStack align="start" spacing={2} flex="1">
+                                <HStack>
+                                  <Box boxSize="24px" color="blue.500">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                    </svg>
+                                  </Box>
+                                  <Heading size="sm">LinkedIn Integration</Heading>
+                                </HStack>
+                                <Text fontSize="sm" color="gray.600">
+                                  Automatically import your LinkedIn profile data and keep your resume synchronized.
+                                </Text>
+                                <HStack spacing={2}>
+                                  <Badge colorScheme="green" fontSize="xs">Installed</Badge>
+                                  <Badge colorScheme="blue" fontSize="xs">Active</Badge>
+                                </HStack>
+                              </VStack>
+                              <VStack spacing={2}>
+                                <Button 
+                                  size="sm" 
+                                  colorScheme="blue" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    // Redirect to LinkedIn OAuth
+                                    window.location.href = '/api/auth/linkedin';
+                                  }}
+                                >
+                                  Configure
+                                </Button>
+                                <Button size="sm" colorScheme="red" variant="ghost">
+                                  Uninstall
+                                </Button>
+                              </VStack>
+                            </HStack>
+                          </CardBody>
+                        </Card>
+
+                        {/* Firefox Extension */}
+                        <Card bg={useColorModeValue('gray.50', 'gray.700')} borderColor={borderColor}>
+                          <CardBody>
+                            <HStack justify="space-between" align="start">
+                              <VStack align="start" spacing={2} flex="1">
+                                <HStack>
+                                  <Box boxSize="24px" color="orange.500">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                  </Box>
+                                  <Heading size="sm">Firefox Extension</Heading>
+                                </HStack>
+                                <Text fontSize="sm" color="gray.600">
+                                  Browser extension for quick resume optimization and job application tracking.
+                                </Text>
+                                <HStack spacing={2}>
+                                  <Badge colorScheme="yellow" fontSize="xs">Not Installed</Badge>
+                                </HStack>
+                              </VStack>
+                              <VStack spacing={2}>
+                                <Button size="sm" colorScheme="blue">
+                                  Install
+                                </Button>
+                              </VStack>
+                            </HStack>
+                          </CardBody>
+                        </Card>
                       </VStack>
                     </CardBody>
                   </Card>
 
                   {user.subscription.plan === 'free' && (
-                    <Card bg={cardBg} borderColor={borderColor}>
-                      <CardHeader>
-                        <Heading size="md">Upgrade to Premium</Heading>
-                      </CardHeader>
-                      <CardBody>
-                        <VStack spacing={4} align="stretch">
-                          <VStack align="start" spacing={2}>
-                            <Text fontWeight="medium">Premium Features:</Text>
-                            <Text fontSize="sm">• Unlimited resume optimizations</Text>
-                            <Text fontSize="sm">• AI-generated cover letters</Text>
-                            <Text fontSize="sm">• Priority customer support</Text>
-                            <Text fontSize="sm">• Advanced job matching</Text>
-                            <Text fontSize="sm">• Export to multiple formats</Text>
-                          </VStack>
-                          <Button
-                            colorScheme="blue"
-                            size="lg"
-                            onClick={handleUpgrade}
-                            leftIcon={<SettingsIcon />}
-                          >
-                            Upgrade Now - $9.99/month
-                          </Button>
-                        </VStack>
-                      </CardBody>
-                    </Card>
+                    <Alert status="info" borderRadius="md">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Unlock Premium Extensions!</AlertTitle>
+                        <AlertDescription>
+                          Upgrade to Premium to access advanced extensions like Job Board Integrations, Resume Templates Pro, and Interview Preparation tools.
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
                   )}
                 </VStack>
               </TabPanel>
