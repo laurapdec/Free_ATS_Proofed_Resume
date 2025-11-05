@@ -1,4 +1,4 @@
-import { Box, Container, VStack, useToast } from '@chakra-ui/react';
+import { Box, Container, VStack, useToast, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { ContactSection } from './ContactSection';
 import { ExperienceSection } from './ExperienceSection';
@@ -116,62 +116,84 @@ export default function ResumeEditor() {
 
   return (
     <Container maxW="container.xl" py={8}>
-      <VStack spacing={8} align="stretch">
-        <ContactSection
-          contactInfo={resume.contactInfo}
-          onUpdate={updateContact}
-        />
-        <ExperienceSection
-          experiences={resume.experiences}
-          onUpdate={createUpdateHandler('experiences')}
-          onAdd={createAddHandler('experiences', {
-            title: 'New Position',
-            company: 'Company Name',
-            location: 'Location',
-            startDate: 'Start Date',
-            endDate: 'Present',
-            description: ['Description'],
-            skills: [],
-          })}
-        />
-        <EducationSection
-          education={resume.education}
-          onUpdate={createUpdateHandler('education')}
-          onAdd={createAddHandler('education', {
-            school: 'School Name',
-            degree: 'Degree',
-            field: 'Field of Study',
-            startDate: 'Start Date',
-            endDate: 'End Date',
-          })}
-        />
-        <PublicationSection
-          publications={resume.publications}
-          onUpdate={createUpdateHandler('publications')}
-          onAdd={createAddHandler('publications', {
-            title: 'Publication Title',
-            publisher: 'Publisher',
-            date: 'Publication Date',
-            authors: ['Author Name'],
-          })}
-        />
-        <SkillsSection
-          skills={resume.skills}
-          onUpdate={createUpdateHandler('skills')}
-          onAdd={createAddHandler('skills', {
-            name: 'Skill Name',
-            level: 'Intermediate',
-          })}
-        />
-        <LanguageSection
-          languages={resume.languages}
-          onUpdate={createUpdateHandler('languages')}
-          onAdd={createAddHandler('languages', {
-            name: 'Language Name',
-            proficiency: 'Professional Working',
-          })}
-        />
-      </VStack>
+      <Tabs variant="enclosed" colorScheme="blue">
+        <TabList>
+          <Tab>Contact</Tab>
+          <Tab>Experience</Tab>
+          <Tab>Education</Tab>
+          <Tab>Publications</Tab>
+          <Tab>Skills</Tab>
+          <Tab>Languages</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <ContactSection
+              contactInfo={resume.contactInfo}
+              onUpdate={updateContact}
+            />
+          </TabPanel>
+          <TabPanel>
+            <ExperienceSection
+              experiences={resume.experiences}
+              onUpdate={createUpdateHandler('experiences')}
+              onAdd={createAddHandler('experiences', {
+                title: 'New Position',
+                company: 'Company Name',
+                location: 'Location',
+                startDate: 'Start Date',
+                endDate: 'Present',
+                description: ['Description'],
+                skills: [],
+              })}
+            />
+          </TabPanel>
+          <TabPanel>
+            <EducationSection
+              education={resume.education}
+              onUpdate={createUpdateHandler('education')}
+              onAdd={createAddHandler('education', {
+                school: 'School Name',
+                degree: 'Degree',
+                field: 'Field of Study',
+                startDate: 'Start Date',
+                endDate: 'End Date',
+              })}
+            />
+          </TabPanel>
+          <TabPanel>
+            <PublicationSection
+              publications={resume.publications}
+              onUpdate={createUpdateHandler('publications')}
+              onAdd={createAddHandler('publications', {
+                title: 'Publication Title',
+                publisher: 'Publisher',
+                date: 'Publication Date',
+                authors: ['Author Name'],
+              })}
+            />
+          </TabPanel>
+          <TabPanel>
+            <SkillsSection
+              skills={resume.skills}
+              onUpdate={createUpdateHandler('skills')}
+              onAdd={createAddHandler('skills', {
+                name: 'Skill Name',
+                level: 'Intermediate',
+              })}
+            />
+          </TabPanel>
+          <TabPanel>
+            <LanguageSection
+              languages={resume.languages}
+              onUpdate={createUpdateHandler('languages')}
+              onAdd={createAddHandler('languages', {
+                name: 'Language Name',
+                proficiency: 'Professional Working',
+              })}
+            />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </Container>
   );
 }

@@ -1,7 +1,7 @@
 import { Box, Flex, VStack, Text, Input, Button, Divider, IconButton, Badge, Tooltip, Spinner, Image, useToast, useColorMode, useColorModeValue } from '@chakra-ui/react';
 import { useMainLayoutTheme } from '../hooks/useMainLayoutTheme';
 import { AttachmentIcon, EditIcon, ArrowForwardIcon, StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { LinkedInSignIn } from './LinkedInSignIn';
 import { ScanCVButton } from './ScanCVButton';
@@ -151,60 +151,79 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
   
   // AI and messaging states
   const [hasInitialPrompt, setHasInitialPrompt] = useState(false);
-  const [jobDescription, setJobDescription] = useState('');
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
 
+  // Job application details
+  const [jobApplication, setJobApplication] = useState<{
+    companyName?: string;
+    positionName?: string;
+    location?: string;
+    workType?: 'remote' | 'hybrid' | 'onsite';
+    salaryRange?: string;
+    visaSponsorship?: boolean;
+    foreignersOk?: boolean;
+    companyLogo?: string;
+  } | null>(null);
+
+  // Chat scroll ref
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+
   const isAuthPage = router.pathname === '/signin';
 
-  const handleJobDescriptionSubmit = async () => {
-    if (!jobDescription.trim() || !resumes.length) return;
+  const handleMessageSubmit = async () => {
+    if (!message.trim() || !resumes.length) return;
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/analyze-job', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          jobDescription,
+          message,
           resume: resumes[0], // Using the first resume
+          conversationHistory: messages,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to analyze job description');
+        throw new Error('Failed to process message');
       }
 
       const data = await response.json();
-      setMessages(prev => [...prev, 
-        { role: 'user', content: jobDescription },
-        { role: 'assistant', content: data.analysis }
+
+      // Add user message and AI response to chat
+      setMessages(prev => [...prev,
+        { role: 'user', content: message },
+        { role: 'assistant', content: data.response }
       ]);
+
+      // If job details were extracted, update the application state
+      if (data.isJobDescription && data.jobDetails) {
+        setJobApplication(data.jobDetails);
+      }
+
     } catch (error) {
-      console.error('Error analyzing job description:', error);
-      // You might want to show an error toast here
+      console.error('Error processing message:', error);
+      setMessages(prev => [...prev,
+        { role: 'user', content: message },
+        { role: 'assistant', content: 'Sorry, I encountered an error processing your message. Please try again.' }
+      ]);
     } finally {
       setIsLoading(false);
-      setJobDescription('');
+      setMessage('');
     }
   };
 
-  // Handle initial resume upload
-  useEffect(() => {
-    if (resumes.length > 0 && !hasInitialPrompt && isLoggedIn && currentPdfUrl) {
-      // Only show the message after we have a valid PDF and the user is logged in
-      const timer = setTimeout(() => {
-        setHasInitialPrompt(true);
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: 'I have analyzed your resume. You can now paste a job description, and I will help you optimize your application.'
-        }]);
-      }, 2000);
-      return () => clearTimeout(timer);
+  // Auto-scroll to bottom when messages change
+  useLayoutEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
-  }, [resumes.length, hasInitialPrompt, isLoggedIn, currentPdfUrl]);
+  }, [messages]);
 
   // Handle split view resizing
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -294,7 +313,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                   try {
                     const url = await generatePDF(resume);
                     setCurrentPdfUrl(url);
-                    setIsLoggedIn(true); // Set login state
+                    // Remove setIsLoggedIn(true) - only login with email/password
                   } catch (error) {
                     console.error('Error generating PDF:', error);
                     // You might want to show an error toast here
@@ -329,6 +348,54 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
           >
             Add Another CV
           </Button>
+
+          {/* Job Application Details */}
+          {jobApplication && (
+            <VStack spacing={3} w="full" pt={4}>
+              <Divider />
+              <Text fontSize="lg" fontWeight="bold">Current Application</Text>
+              <Box
+                w="full"
+                p={4}
+                borderRadius="lg"
+                border="1px"
+                borderColor={theme.borderColor}
+                bg={theme.cardBg}
+              >
+                <VStack spacing={3} align="start">
+                  {jobApplication.companyLogo && (
+                    <Image
+                      src={jobApplication.companyLogo}
+                      alt={`${jobApplication.companyName} logo`}
+                      boxSize="40px"
+                      objectFit="contain"
+                      fallbackSrc="https://via.placeholder.com/40x40?text=Logo"
+                    />
+                  )}
+                  <Text fontWeight="bold">{jobApplication.companyName}</Text>
+                  <Text fontSize="sm" color="gray.600">{jobApplication.positionName}</Text>
+                  <VStack spacing={1} align="start" w="full">
+                    {jobApplication.location && (
+                      <Text fontSize="sm">📍 {jobApplication.location}</Text>
+                    )}
+                    {jobApplication.workType && (
+                      <Text fontSize="sm">🏢 {jobApplication.workType.charAt(0).toUpperCase() + jobApplication.workType.slice(1)}</Text>
+                    )}
+                    {jobApplication.salaryRange && (
+                      <Text fontSize="sm">💰 {jobApplication.salaryRange}</Text>
+                    )}
+                    {jobApplication.visaSponsorship && (
+                      <Text fontSize="sm">🛂 Visa Sponsorship Available</Text>
+                    )}
+                    {jobApplication.foreignersOk && (
+                      <Text fontSize="sm">🌍 Open to International Candidates</Text>
+                    )}
+                  </VStack>
+                </VStack>
+              </Box>
+            </VStack>
+          )}
+
           <Divider />
         </VStack>
         )}
@@ -547,7 +614,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
         <Box w="70%" position="relative">
           <Flex direction="column" h="full" id="main-content">
             {/* Split view area */}
-            <Box flex="1" position="relative" display="flex">
+            <Box flex="1" position="relative" display="flex" h="full">
               {/* CV Preview */}
               <Box
                 w={resumes.length ? `${splitPosition}%` : "0"}
@@ -555,13 +622,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 borderRight="1px"
                 borderColor={theme.borderColor}
                 bg={theme.bgColor}
-                overflowY="auto"
+                h="full"
                 position="relative"
               >
                 {resumes.length > 0 && (
                   <>
                     <Box p={0} h="full">
-                      <Box h="calc(100% )">
+                      <Box h="full">
                         {currentPdfUrl ? (
                           <PDFViewer file={currentPdfUrl} />
                         ) : (
@@ -592,43 +659,98 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 direction="column"
                 w={resumes.length ? `${100 - splitPosition}%` : "100%"}
                 transition="width 0.2s"
+                h="full"
               >
                 {/* Chat messages */}
                 <Box 
+                  ref={chatMessagesRef}
                   flex="1" 
                   overflowY="auto" 
                   p={4}
+                  sx={{
+                    '&::-webkit-scrollbar': {
+                      width: '4px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      width: '6px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: 'gray.300',
+                      borderRadius: 'md',
+                    },
+                  }}
                 >
                   {resumes.length > 0 && !hasInitialPrompt && (
-                    <Box 
-                      p={4} 
-                      bg={colors.blueHighlight} 
-                      borderRadius="lg"
-                      mb={4}
-                    >
-                      <Text fontWeight="medium" color={colors.blueText}>
-                        I'm analyzing your resume... This will just take a moment.
-                      </Text>
-                    </Box>
+                    <Flex mb={4} justify="flex-start">
+                      <Box
+                        maxW="70%"
+                        p={3}
+                        bg={colors.blueHighlight}
+                        borderRadius="lg"
+                        borderBottomLeftRadius="0"
+                        position="relative"
+                        _after={{
+                          content: '""',
+                          position: 'absolute',
+                          bottom: '-8px',
+                          left: '16px',
+                          width: '0',
+                          height: '0',
+                          borderLeft: '8px solid transparent',
+                          borderRight: '8px solid transparent',
+                          borderTop: `8px solid ${colors.blueHighlight}`,
+                        }}
+                      >
+                        <Text
+                          color={colors.blueText}
+                          fontSize="sm"
+                          lineHeight="1.4"
+                          fontWeight="medium"
+                        >
+                          I'm analyzing your resume... This will just take a moment.
+                        </Text>
+                      </Box>
+                    </Flex>
                   )}
                   {messages.map((message, index) => (
-                    <Box
+                    <Flex
                       key={index}
                       mb={4}
-                      p={4}
-                      bg={message.role === 'assistant' 
-                        ? colors.blueHighlight
-                        : colors.gray}
-                      borderRadius="lg"
+                      justify={message.role === 'user' ? 'flex-end' : 'flex-start'}
                     >
-                      <Text
-                        color={message.role === 'assistant'
-                          ? colors.blueText
-                          : 'inherit'}
+                      <Box
+                        maxW="70%"
+                        p={3}
+                        bg={message.role === 'assistant'
+                          ? colors.blueHighlight
+                          : colors.blueSecondary}
+                        borderRadius="lg"
+                        borderBottomLeftRadius={message.role === 'assistant' ? '0' : 'lg'}
+                        borderBottomRightRadius={message.role === 'user' ? '0' : 'lg'}
+                        position="relative"
+                        _after={{
+                          content: '""',
+                          position: 'absolute',
+                          bottom: '-8px',
+                          [message.role === 'user' ? 'right' : 'left']: '16px',
+                          width: '0',
+                          height: '0',
+                          borderLeft: message.role === 'user' ? '8px solid transparent' : `8px solid ${colors.blueSecondary}`,
+                          borderRight: message.role === 'user' ? `8px solid ${colors.blueSecondary}` : '8px solid transparent',
+                          borderTop: `8px solid ${message.role === 'assistant' ? colors.blueHighlight : colors.blueSecondary}`,
+                        }}
                       >
-                        {message.content}
-                      </Text>
-                    </Box>
+                        <Text
+                          color={message.role === 'assistant'
+                            ? colors.blueText
+                            : 'white'}
+                          fontSize="sm"
+                          lineHeight="1.4"
+                        >
+                          {message.content}
+                        </Text>
+                      </Box>
+                    </Flex>
                   ))}
                   {children}
                 </Box>
@@ -637,7 +759,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 <Box p={4} borderTop="1px" borderColor={theme.borderColor} bg={theme.bgColor}>
                   <form onSubmit={(e) => {
                     e.preventDefault();
-                    handleJobDescriptionSubmit();
+                    handleMessageSubmit();
                   }}>
                     <Flex gap={2}>
                       <Tooltip 
@@ -663,11 +785,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                       </Tooltip>
                       <Input
                         flex="1"
-                        placeholder="Paste the job description"
+                        placeholder="Ask me anything about your job search..."
                         size="lg"
                         variant="filled"
-                        value={jobDescription}
-                        onChange={(e) => setJobDescription(e.target.value)}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
                         disabled={isLoading || !resumes.length}
                       />
                       <IconButton
@@ -677,7 +799,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                         colorScheme="blue"
                         type="submit"
                         isLoading={isLoading}
-                        disabled={!jobDescription.trim() || !resumes.length}
+                        disabled={!message.trim() || !resumes.length}
                       />
                     </Flex>
                   </form>
