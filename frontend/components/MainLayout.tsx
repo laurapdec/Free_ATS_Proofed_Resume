@@ -292,13 +292,17 @@ I can then tailor your resume and generate customized application materials!`;
     // Handle contact info editing
     if (editingField.startsWith('contactInfo.')) {
       const field = editingField.split('.')[1];
-      if (!updatedResume.contactInfo) updatedResume.contactInfo = {};
+      if (!updatedResume.contactInfo) updatedResume.contactInfo = {
+        email: '',
+        phone: '',
+        location: { city: '', country: '' }
+      };
       if (field === 'email') updatedResume.contactInfo.email = editValue;
       else if (field === 'phone') updatedResume.contactInfo.phone = editValue;
       else if (field === 'location') {
         // Parse the location string like "City, Country"
         const parts = editValue.split(',').map(p => p.trim());
-        if (!updatedResume.contactInfo.location) updatedResume.contactInfo.location = {};
+        if (!updatedResume.contactInfo.location) updatedResume.contactInfo.location = { city: '', country: '' };
         updatedResume.contactInfo.location.city = parts[0] || '';
         updatedResume.contactInfo.location.country = parts[1] || '';
       } else if (field === 'linkedin') updatedResume.contactInfo.linkedin = editValue;
@@ -1760,8 +1764,9 @@ I can then tailor your resume and generate customized application materials!`;
                           borderTop: `8px solid ${message.role === 'assistant' ? colors.blueHighlight : colors.blueSecondary}`,
                         }}
                       >
-                        <ReactMarkdown
-                          components={{
+                        {ReactMarkdown({
+                          children: message.content,
+                          components: {
                             p: ({ children }) => (
                               <Text
                                 color={message.role === 'assistant'
@@ -1807,10 +1812,8 @@ I can then tailor your resume and generate customized application materials!`;
                             hr: () => (
                               <Divider my={3} />
                             ),
-                          }}
-                        >
-                          {message.content}
-                        </ReactMarkdown>
+                          }
+                        })}
                       </Box>
                     </Flex>
                   ))}
@@ -1839,7 +1842,7 @@ I can then tailor your resume and generate customized application materials!`;
                       </Tooltip>
                       <Input
                         flex="1"
-                        placeholder={isPdfReviewed ? "Ask me anything about your job search..." : "Please wait while I analyze your resume..."}
+                        placeholder={isPdfReviewed ? "Ask me anything about your job search..." : "Please wait until I analyze your resume..."}
                         size="lg"
                         variant="filled"
                         value={message}

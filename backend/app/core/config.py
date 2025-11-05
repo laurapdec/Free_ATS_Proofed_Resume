@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     linkedin_client_secret: str = ""
     linkedin_redirect_uri: str = "http://127.0.0.1:8000/api/v1/linkedin/callback"
     
+    # Google Cloud AI
+    google_cloud_project: str = ""
+    
     # Database
     database_url: str = "sqlite:///database.db"
 
