@@ -210,6 +210,98 @@ async def get_latest_resume(session: Session = Depends(get_session)):
         print(f"Error in get_latest_resume: {str(e)}")
         print(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error retrieving resume: {str(e)}")
+
+@router.post("/upload-cover-letter", summary="Upload cover letter for a resume")
+async def upload_cover_letter(
+    file: UploadFile = File(...),
+    resume_id: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    """Upload a cover letter file for an existing resume."""
+    try:
+        print(f"Received cover letter upload request - resume_id: {resume_id}")
+        print(f"File: {file.filename}, content_type: {file.content_type}")
+
+        # Validate file
+        validate_file(file)
+
+        # Get the resume from the database
+        resume = session.get(Resume, int(resume_id))
+        if not resume:
+            raise HTTPException(status_code=404, detail="Resume not found")
+
+        # Create folder path based on existing resume
+        resume_dir = os.path.dirname(resume.file_path)
+        cl_filename = f"CL_{os.path.basename(file.filename)}"
+        cl_path = os.path.join(resume_dir, cl_filename)
+
+        print(f"Saving cover letter to: {cl_path}")
+
+        # Save cover letter
+        contents = await file.read()
+        with open(cl_path, "wb") as f:
+            f.write(contents)
+
+        # Create cover letter record
+        db_cover_letter = CoverLetter(
+            resume_id=int(resume_id),
+            file_path=cl_path
+        )
+        session.add(db_cover_letter)
+        session.commit()
+
+        print(f"Created cover letter record for resume ID: {resume_id}")
+
+        return JSONResponse({
+            "message": "Cover letter uploaded successfully",
+            "pdf_url": f"http://127.0.0.1:8000/api/v1/resumes/cover-letter/{db_cover_letter.id}",
+            "cover_letter_id": db_cover_letter.id
+        })
+
+    except Exception as e:
+        print(f"Error uploading cover letter: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/cover-letter/{cover_letter_id}", summary="Get cover letter file by ID")
+async def get_cover_letter_file(cover_letter_id: int, session: Session = Depends(get_session)):
+    """Get the uploaded cover letter file by ID."""
+    try:
+        # Get the cover letter from the database
+        cover_letter = session.get(CoverLetter, cover_letter_id)
+        if not cover_letter:
+            raise HTTPException(status_code=404, detail="Cover letter not found")
+
+        # Check if file exists
+        if not os.path.exists(cover_letter.file_path):
+            raise HTTPException(status_code=404, detail="Cover letter file not found")
+
+        # Get file name from path
+        filename = os.path.basename(cover_letter.file_path)
+
+        # Determine content type based on file extension
+        content_type = 'application/pdf'  # Default to PDF
+        if filename.lower().endswith('.doc'):
+            content_type = 'application/msword'
+        elif filename.lower().endswith('.docx'):
+            content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+        # Return the file
+        headers = {
+            'Content-Disposition': f'inline; filename="{filename}"',
+            'Access-Control-Expose-Headers': 'Content-Disposition',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=3600'
+        }
+
+        return FileResponse(
+            path=cover_letter.file_path,
+            media_type=content_type,
+            filename=filename,
+            headers=headers
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
         
         print(f"Found resume with path: {resume.file_path}")
         

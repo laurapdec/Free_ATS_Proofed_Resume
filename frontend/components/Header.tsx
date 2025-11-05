@@ -62,9 +62,17 @@ export function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
                   size="sm"
                   variant="solid"
                   colorScheme="blue"
-                  onClick={() => {
-                    setIsLoggedIn(false);
-                    router.push('/');
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/auth/logout', { method: 'POST' });
+                      setIsLoggedIn(false);
+                      router.push('/');
+                    } catch (error) {
+                      console.error('Logout error:', error);
+                      // Force logout on client side even if API call fails
+                      setIsLoggedIn(false);
+                      router.push('/');
+                    }
                   }}
                 >
                   Logout

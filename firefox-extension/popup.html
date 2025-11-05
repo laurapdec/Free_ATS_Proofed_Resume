@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      min-height: 400px;
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 8px;
+      background: #4299E1;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3748;
+      margin: 0;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #718096;
+      margin: 4px 0 0 0;
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #2d3748;
+      margin: 0 0 12px 0;
+    }
+
+    .job-info {
+      margin-bottom: 12px;
+    }
+
+    .job-title {
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+
+    .job-company {
+      color: #718096;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .job-location {
+      color: #718096;
+      font-size: 12px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 8px;
+    }
+
+    .btn-primary {
+      background: #4299E1;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #3182CE;
+    }
+
+    .btn-secondary {
+      background: #E2E8F0;
+      color: #4A5568;
+    }
+
+    .btn-secondary:hover {
+      background: #CBD5E0;
+    }
+
+    .status {
+      text-align: center;
+      color: #718096;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .no-job {
+      text-align: center;
+      color: #a0aec0;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🚀</div>
+    <h1 class="title">ATS Resume Optimizer</h1>
+    <p class="subtitle">Extract & optimize job applications</p>
+  </div>
+
+  <div id="job-section" class="section">
+    <h2 class="section-title">Current Job</h2>
+    <div id="job-content">
+      <p class="no-job">Navigate to a job posting to get started</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <button id="extract-btn" class="btn btn-primary">
+      Extract Job Description
+    </button>
+    <button id="open-app-btn" class="btn btn-secondary">
+      Open Resume Optimizer
+    </button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

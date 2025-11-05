@@ -10,16 +10,55 @@ export default function SignIn() {
   const router = useRouter();
   const toast = useToast();
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [signinEmail, setsigninEmail] = useState('');
+  const [signinPassword, setsigninPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [signinFirstName, setsigninFirstName] = useState('');
+  const [signinLastName, setsigninLastName] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetCode, setShowResetCode] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Add your sign-in logic here
-      // Redirect to home page
-      router.push('/');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: 'Sign in successful',
+          description: 'Welcome back!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+        // Redirect to home page
+        router.push('/');
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Sign in failed',
+          description: errorData.message || 'Invalid email or password',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to sign in',
+        description: 'Failed to sign in. Please try again.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -27,17 +66,66 @@ export default function SignIn() {
     }
   };
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [signinEmail, setsigninEmail] = useState('');
-  const [signinPassword, setsigninPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
-  const handlesignin = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (signinPassword !== confirmPassword) {
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Reset code sent',
+          description: 'Please check your email for a 6-digit reset code.',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        setShowForgotPassword(false);
+        setShowResetCode(true);
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Error',
+          description: errorData.message || 'Failed to send password reset code.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
       toast({
         title: 'Error',
-        description: 'Passwords do not match',
+        description: 'Failed to send password reset code. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: 'Passwords do not match',
+        description: 'Please make sure your passwords match.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Password too short',
+        description: 'Password must be at least 6 characters long.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -46,12 +134,108 @@ export default function SignIn() {
     }
 
     try {
-      // Add your sign-up logic here
-      router.push('/');
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: resetCode,
+          new_password: newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Password reset successful',
+          description: 'Your password has been reset. You can now sign in with your new password.',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        // Reset form and go back to sign in
+        setShowResetCode(false);
+        setResetCode('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setForgotPasswordEmail('');
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Reset failed',
+          description: errorData.message || 'Failed to reset password.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to sign up',
+        description: 'Failed to reset password. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (signinPassword !== confirmPassword) {
+      toast({
+        title: 'Passwords do not match',
+        description: 'Please make sure your passwords match.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: signinEmail, 
+          password: signinPassword,
+          firstName: signinFirstName,
+          lastName: signinLastName
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: 'Account created successfully',
+          description: 'Please sign in with your new account.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+        // Clear signup form
+        setsigninEmail('');
+        setsigninPassword('');
+        setConfirmPassword('');
+        setsigninFirstName('');
+        setsigninLastName('');
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Sign up failed',
+          description: errorData.message || 'Failed to create account',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create account. Please try again.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -66,8 +250,30 @@ export default function SignIn() {
           <Text fontSize="2xl" fontWeight="bold">Create Account</Text>
         </VStack>
         
-        <Box as="form" onSubmit={handlesignin}>
+        <Box as="form" onSubmit={handleSignup}>
           <Stack spacing={4}>
+            <FormControl isRequired>
+              <FormLabel>First Name</FormLabel>
+              <Input
+                type="text"
+                value={signinFirstName}
+                onChange={(e) => setsigninFirstName(e.target.value)}
+                placeholder="Enter your first name"
+                size="lg"
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel>Last Name</FormLabel>
+              <Input
+                type="text"
+                value={signinLastName}
+                onChange={(e) => setsigninLastName(e.target.value)}
+                placeholder="Enter your last name"
+                size="lg"
+              />
+            </FormControl>
+
             <FormControl isRequired>
               <FormLabel>Email</FormLabel>
               <Input
@@ -146,48 +352,182 @@ export default function SignIn() {
           <Container maxW="container.sm">
             <VStack spacing={8} align="stretch">
               <VStack spacing={3}>
-                <Text fontSize="2xl" fontWeight="bold">Sign In</Text>
-              </VStack>              <Box as="form" onSubmit={handleSubmit}>
-                <Stack spacing={4}>
-                  <FormControl isRequired>
-                    <FormLabel>Email</FormLabel>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
+                <Text fontSize="2xl" fontWeight="bold">
+                  {showForgotPassword ? 'Reset Password' : showResetCode ? 'Enter Reset Code' : 'Sign In'}
+                </Text>
+              </VStack>
+
+              {showResetCode ? (
+                <Box as="form" onSubmit={handleResetPassword}>
+                  <Stack spacing={4}>
+                    <Text textAlign="center" color="gray.600" mb={4}>
+                      Enter the 6-digit code sent to {forgotPasswordEmail} and your new password.
+                    </Text>
+                    <FormControl isRequired>
+                      <FormLabel>Reset Code</FormLabel>
+                      <Input
+                        type="text"
+                        value={resetCode}
+                        onChange={(e) => setResetCode(e.target.value)}
+                        placeholder="Enter 6-digit code"
+                        size="lg"
+                        maxLength={6}
+                      />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel>New Password</FormLabel>
+                      <Input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter your new password"
+                        size="lg"
+                      />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel>Confirm New Password</FormLabel>
+                      <Input
+                        type="password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        placeholder="Confirm your new password"
+                        size="lg"
+                      />
+                    </FormControl>
+
+                    <Button
+                      type="submit"
+                      colorScheme="blue"
                       size="lg"
-                    />
-                  </FormControl>
+                      width="100%"
+                      mt={4}
+                      position="relative"
+                      zIndex={2}
+                    >
+                      Reset Password
+                    </Button>
 
-                  <FormControl isRequired>
-                    <FormLabel>Password</FormLabel>
-                    <Input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
+                    <Text
+                      textAlign="center"
+                      color="blue.500"
+                      fontSize="sm"
+                      mt={2}
+                      position="relative"
+                      zIndex={2}
+                      cursor="pointer"
+                      onClick={() => {
+                        setShowResetCode(false);
+                        setResetCode('');
+                        setNewPassword('');
+                        setConfirmNewPassword('');
+                        setForgotPasswordEmail('');
+                      }}
+                      _hover={{ textDecoration: 'underline' }}
+                    >
+                      Back to Sign In
+                    </Text>
+                  </Stack>
+                </Box>
+              ) : showForgotPassword ? (
+                <Box as="form" onSubmit={handleForgotPassword}>
+                  <Stack spacing={4}>
+                    <Text textAlign="center" color="gray.600" mb={4}>
+                      Enter your email address and we'll send you a link to reset your password.
+                    </Text>
+                    <FormControl isRequired>
+                      <FormLabel>Email</FormLabel>
+                      <Input
+                        type="email"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        size="lg"
+                      />
+                    </FormControl>
+
+                    <Button
+                      type="submit"
+                      colorScheme="blue"
                       size="lg"
-                    />
-                  </FormControl>
+                      width="100%"
+                      mt={4}
+                      position="relative"
+                      zIndex={2}
+                    >
+                      Send Reset Link
+                    </Button>
 
-                  <Button 
-                    type="submit" 
-                    colorScheme="blue" 
-                    size="lg" 
-                    width="100%"
-                    mt={4}
-                    position="relative"
-                    zIndex={2}
-                  >
-                    Sign In
-                  </Button>
+                    <Text
+                      textAlign="center"
+                      color="blue.500"
+                      fontSize="sm"
+                      mt={2}
+                      position="relative"
+                      zIndex={2}
+                      cursor="pointer"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordEmail('');
+                      }}
+                      _hover={{ textDecoration: 'underline' }}
+                    >
+                      Back to Sign In
+                    </Text>
+                  </Stack>
+                </Box>
+              ) : (
+                <Box as="form" onSubmit={handleSubmit}>
+                  <Stack spacing={4}>
+                    <FormControl isRequired>
+                      <FormLabel>Email</FormLabel>
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        size="lg"
+                      />
+                    </FormControl>
 
-                  <Text textAlign="center" color="gray.500" fontSize="sm" mt={2} position="relative" zIndex={2}>
-                    Sign in to unlock all premium features
-                  </Text>
-                </Stack>
-              </Box>
+                    <FormControl isRequired>
+                      <FormLabel>Password</FormLabel>
+                      <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        size="lg"
+                      />
+                    </FormControl>
+
+                    <Button
+                      type="submit"
+                      colorScheme="blue"
+                      size="lg"
+                      width="100%"
+                      mt={4}
+                      position="relative"
+                      zIndex={2}
+                    >
+                      Sign In
+                    </Button>
+
+                    <Text
+                      textAlign="center"
+                      color="blue.500"
+                      fontSize="sm"
+                      mt={2}
+                      position="relative"
+                      zIndex={2}
+                      cursor="pointer"
+                      onClick={() => setShowForgotPassword(true)}
+                      _hover={{ textDecoration: 'underline' }}
+                    >
+                      Forgot your account?
+                    </Text>
+                  </Stack>
+                </Box>
+              )}
             </VStack>
           </Container>
         </Box>

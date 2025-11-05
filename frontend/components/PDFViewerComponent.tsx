@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Box, IconButton, Flex, Text, useColorModeValue } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
@@ -10,7 +10,7 @@ interface PDFViewerComponentProps {
   file: string;
 }
 
-const PDFViewerComponent: React.FC<PDFViewerComponentProps> = ({ file }) => {
+const PDFViewerComponent: React.FC<PDFViewerComponentProps> = memo(({ file }) => {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageWidth, setPageWidth] = useState(600);
@@ -104,6 +104,7 @@ const PDFViewerComponent: React.FC<PDFViewerComponentProps> = ({ file }) => {
       )}
     </Box>
   );
-};
+},
+);
 
-export default PDFViewerComponent;
+export default memo(PDFViewerComponent);

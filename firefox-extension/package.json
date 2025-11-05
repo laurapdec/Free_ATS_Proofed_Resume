@@ -1,0 +1,12 @@
+{
+  "name": "ats-resume-optimizer-firefox",
+  "version": "1.0.0",
+  "description": "Firefox extension for ATS Resume Optimizer",
+  "scripts": {
+    "build": "echo 'Extension built successfully'",
+    "package": "zip -r ats-resume-optimizer.xpi * -x '*.git*' '*.DS_Store' 'node_modules/*'",
+    "test": "echo 'No tests specified'"
+  },
+  "author": "ATS Resume Optimizer Team",
+  "license": "MIT"
+}

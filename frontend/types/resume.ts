@@ -6,6 +6,8 @@ export interface ContactInfo {
     country: string;
     state?: string;
   };
+  linkedin?: string;
+  website?: string;
 }
 
 export interface Experience {

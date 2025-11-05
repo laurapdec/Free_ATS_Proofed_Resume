@@ -1,0 +1,14 @@
+/* Content script styles for ATS Resume Optimizer */
+
+#ats-resume-optimizer-btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  user-select: none !important;
+}
+
+#ats-resume-optimizer-btn:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+}
+
+#ats-resume-optimizer-btn:active {
+  transform: translateY(0) !important;
+}

@@ -12,3 +12,7 @@ reportlab==4.0.6
 bcrypt==4.0.1
 httpx==0.25.0
 python-magic==0.4.27
+sqlmodel==0.0.14
+alembic==1.12.1
+email-validator==2.1.0
+sendgrid==6.10.0
