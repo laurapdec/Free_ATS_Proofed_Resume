@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     
-    # CORS
-    backend_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.233:3000,http://localhost:8000,http://127.0.0.1:8000,http://192.168.1.233:8000"
+    # CORS - Make sure to include all necessary origins
+    backend_cors_origins: str = "*"  # For development only. In production, specify exact origins
     
     # Frontend URL (default to production, override in env)
     frontend_url: str = "http://localhost:3000"

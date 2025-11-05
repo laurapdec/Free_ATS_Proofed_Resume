@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from app.core.config import settings
+from app.core.security.middleware import SecurityMiddleware, RequestValidationMiddleware
 from app.db import init_db
 
 app = FastAPI(
@@ -9,20 +11,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware configuration
+# CORS middleware configuration - must be first!
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000"
-    ],
+    allow_origins=["*"],  # For development only. In production, specify exact origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Type", "Content-Disposition"]
+    expose_headers=["*"]
 )
+
+# Add security middlewares after CORS
+app.add_middleware(SecurityMiddleware)
+app.add_middleware(RequestValidationMiddleware)
 
 # Initialize database
 @app.on_event("startup")

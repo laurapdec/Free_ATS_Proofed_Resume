@@ -1,4 +1,5 @@
-import { Box, Flex, VStack, Text, Input, Button, Divider, useColorModeValue, IconButton, Badge, Tooltip, Spinner, Image, useToast } from '@chakra-ui/react';
+import { Box, Flex, VStack, Text, Input, Button, Divider, IconButton, Badge, Tooltip, Spinner, Image, useToast, useColorMode, useColorModeValue } from '@chakra-ui/react';
+import { useMainLayoutTheme } from '../hooks/useMainLayoutTheme';
 import { AttachmentIcon, EditIcon, ArrowForwardIcon, StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -122,19 +123,16 @@ const EyeIcon: React.FC = () => (
 import { useRouter } from 'next/router';
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element => {
-  // Theme hooks must be called first and in the same order
-  const bgColor = useColorModeValue('gray.50', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  
-  // Router and utility hooks
+  // Context hooks must come first and in the same order every time
   const router = useRouter();
-  const toast = useToast();
   
-  // Authentication and Resume states
+  // Use custom theme hook to ensure consistent order
+  const theme = useMainLayoutTheme();
+  const toast = useToast();
+
+  // State hooks
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
-  
-  // Layout and UI states
   const [splitPosition, setSplitPosition] = useState(50);
   const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
   const [coverLetterPdfUrl, setCoverLetterPdfUrl] = useState<string | null>(null);
@@ -324,8 +322,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
               p={8}
               borderRadius="xl"
               border="1px"
-              borderColor={borderColor}
-              bg={useColorModeValue('white', 'gray.700')}
+              borderColor={theme.borderColor}
+              bg={theme.cardBg}
             >
               <VStack spacing={8}>
                 <Box
@@ -516,8 +514,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
         <Box
           w="30%"
           borderRight="1px"
-          borderColor={borderColor}
-          bg={bgColor}
+          borderColor={theme.borderColor}
+          bg={theme.bgColor}
           overflowY="auto"
         >
           {renderSidebar()}
@@ -614,7 +612,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }): JSX.Element
                 </Box>
 
                 {/* Job description input area */}
-                <Box p={4} borderTop="1px" borderColor={borderColor} bg={bgColor}>
+                <Box p={4} borderTop="1px" borderColor={theme.borderColor} bg={theme.bgColor}>
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     handleJobDescriptionSubmit();
