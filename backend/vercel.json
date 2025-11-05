@@ -3,44 +3,13 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
       "dest": "api/index.py"
-    }
-  ],
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 30
-    }
-  },
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "https://atsproofedcv.com"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, X-Requested-With"
-        },
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        }
-      ]
     }
   ]
 }

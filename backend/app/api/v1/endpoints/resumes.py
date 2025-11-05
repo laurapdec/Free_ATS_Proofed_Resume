@@ -254,7 +254,7 @@ async def upload_cover_letter(
 
         return JSONResponse({
             "message": "Cover letter uploaded successfully",
-            "pdf_url": f"http://127.0.0.1:8000/api/v1/resumes/cover-letter/{db_cover_letter.id}",
+            "pdf_url": f"http://backend-sable-iota-89.vercel.app/api/v1/resumes/cover-letter/{db_cover_letter.id}",
             "cover_letter_id": db_cover_letter.id
         })
 
