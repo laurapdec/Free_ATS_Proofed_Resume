@@ -45,6 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Accept': 'application/json',
       },
       body: formData,
+      redirect: 'follow',
     });
 
     if (!uploadResponse.ok) {
