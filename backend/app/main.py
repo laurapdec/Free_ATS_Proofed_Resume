@@ -35,7 +35,32 @@ app.add_middleware(RequestValidationMiddleware)
 # Initialize database
 @app.on_event("startup")
 async def on_startup():
-    init_db()
+    global language_client
+    try:
+        init_db()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Database initialization failed: {e}")
+        # Don't fail the app startup if DB init fails
+        pass
+
+    try:
+        # Try to initialize Google Cloud Language client
+        creds = settings.get_google_credentials()
+        if creds:
+            # Set credentials in environment for Google Cloud client
+            import google.auth
+            from google.oauth2 import service_account
+
+            credentials = service_account.Credentials.from_service_account_info(creds)
+            language_client = language_v1.LanguageServiceClient(credentials=credentials)
+            print("Google Cloud Language client initialized successfully")
+        else:
+            print("Google Cloud credentials not available - AI features will be disabled")
+            language_client = None
+    except Exception as e:
+        print(f"Google Cloud Language client initialization failed: {e}")
+        language_client = None
 
 # Include routers here
 from app.api.v1.router import api_router
@@ -76,12 +101,6 @@ def init_language_client():
 
 # Global variable to track initialization
 language_client = None
-
-@app.on_event("startup")
-async def on_startup():
-    global language_client
-    init_db()
-    language_client = init_language_client()
 
 def analyze_resume_content(resume: Dict[str, Any]) -> Dict[str, Any]:
     """Analyze resume content and extract key insights."""

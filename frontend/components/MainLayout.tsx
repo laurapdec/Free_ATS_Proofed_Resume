@@ -457,7 +457,7 @@ I can then tailor your resume and generate customized application materials!`;
   };
 
   // Auto-scroll to bottom when messages change
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined' && chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
