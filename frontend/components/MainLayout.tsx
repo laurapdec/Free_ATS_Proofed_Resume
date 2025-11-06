@@ -12,7 +12,6 @@ import type { Resume } from '../types/resume';
 import { isValidResume } from '../utils/validation';
 import { generatePDF } from '../utils/api';
 import { Header } from './Header';
-import ReactMarkdown from 'react-markdown';
 
 interface MainLayoutProps {
   children?: React.ReactNode;
@@ -1779,56 +1778,16 @@ I can then tailor your resume and generate customized application materials!`;
                           borderTop: `8px solid ${message.role === 'assistant' ? colors.blueHighlight : colors.blueSecondary}`,
                         }}
                       >
-                        <ReactMarkdown
-                          children={message.content}
-                          components={{
-                            p: ({ children }) => (
-                              <Text
-                                color={message.role === 'assistant'
-                                  ? colors.blueText
-                                  : 'white'}
-                                fontSize="sm"
-                                lineHeight="1.4"
-                                mb={2}
-                              >
-                                {children}
-                              </Text>
-                            ),
-                            strong: ({ children }) => (
-                              <Text as="strong" fontWeight="bold">
-                                {children}
-                              </Text>
-                            ),
-                            h1: ({ children }) => (
-                              <Text fontSize="lg" fontWeight="bold" mb={2}>
-                                {children}
-                              </Text>
-                            ),
-                            h2: ({ children }) => (
-                              <Text fontSize="md" fontWeight="bold" mb={2}>
-                                {children}
-                              </Text>
-                            ),
-                            h3: ({ children }) => (
-                              <Text fontSize="sm" fontWeight="bold" mb={1}>
-                                {children}
-                              </Text>
-                            ),
-                            ul: ({ children }) => (
-                              <VStack align="start" spacing={1} mb={2}>
-                                {children}
-                              </VStack>
-                            ),
-                            li: ({ children }) => (
-                              <Text fontSize="sm" lineHeight="1.4" pl={2}>
-                                • {children}
-                              </Text>
-                            ),
-                            hr: () => (
-                              <Divider my={3} />
-                            ),
-                          }}
-                        />
+                        <Text
+                          color={message.role === 'assistant'
+                            ? colors.blueText
+                            : 'white'}
+                          fontSize="sm"
+                          lineHeight="1.4"
+                          whiteSpace="pre-wrap"
+                        >
+                          {message.content}
+                        </Text>
                       </Box>
                     </Flex>
                   ))}
