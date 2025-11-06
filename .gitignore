@@ -129,3 +129,4 @@ backend/.env.production.local
 *_KEY*
 *_TOKEN*
 *API_KEY*
+.vercel
