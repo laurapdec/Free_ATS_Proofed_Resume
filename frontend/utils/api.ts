@@ -20,31 +20,32 @@ async function fetchWithRetry(url: string, options: RequestInit, retries: number
 
 export async function generatePDF(resumeData: any): Promise<string> {
   try {
-    console.log('Fetching resume ID...');
-    // First get the resume ID
-    const resumeResponse = await fetch(`${API_URL}/api/v1/resumes/generate-pdf`, {
-      method: 'GET',
+    console.log('Generating PDF with resume data...');
+
+    // Send the resume data to generate the PDF
+    const response = await fetchWithRetry(`${API_URL}/api/v1/resumes/generate-pdf`, {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Origin': 'http://localhost:3000',
       },
+      body: JSON.stringify(resumeData),
       mode: 'cors',
     });
 
-    if (!resumeResponse.ok) {
-      const errorText = await resumeResponse.text();
-      console.error('Failed to get resume ID:', errorText);
-      throw new Error(`Failed to get resume ID: ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to generate PDF:', errorText);
+      throw new Error(`Failed to generate PDF: ${errorText}`);
     }
 
-    const data = await resumeResponse.json();
-    console.log('Got response:', data);
-    const { resume_id } = data;
-    
-    // Return the direct URL instead of creating a blob
+    const data = await response.json();
+    console.log('PDF generation response:', data);
+
+    // Return the direct URL to serve the PDF
     const timestamp = Date.now();
-    const directUrl = `${API_URL}/api/v1/pdf/serve-pdf/${resume_id}?t=${timestamp}`;
-    console.log('Returning direct PDF URL:', directUrl);
+    const directUrl = `${API_URL}/api/v1/pdf/serve-pdf/${data.resume_id}?t=${timestamp}`;
+    console.log('Returning PDF URL:', directUrl);
     return directUrl;
   } catch (error) {
     console.error('Error generating PDF:', error);
