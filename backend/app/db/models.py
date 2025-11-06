@@ -1,58 +1,19 @@
-from sqlmodel import SQLModel, Field, create_engine, Session, Relationship
+from sqlmodel import SQLModel, Field, create_engine, Session, select, Relationship
 from datetime import datetime
 from typing import Optional, List
 import os
-from google.cloud.sql.connector import Connector
-import pg8000
-
-# Database configuration
 from app.core.config import settings
 
 def get_database_url():
     """Get database URL based on environment configuration"""
-    db_type = os.getenv("DATABASE_TYPE", "sqlite")
-
-    if db_type == "cloudsql":
-        # Google Cloud SQL configuration
-        instance_connection_name = os.getenv("INSTANCE_CONNECTION_NAME")
-        db_user = os.getenv("DB_USER")
-        db_pass = os.getenv("DB_PASS")
-        db_name = os.getenv("DB_NAME")
-
-        if not all([instance_connection_name, db_user, db_pass, db_name]):
-            print("Missing Cloud SQL environment variables, falling back to SQLite")
-            db_type = "sqlite"
-
-    if db_type == "cloudsql":
-        try:
-            connector = Connector()
-
-            def getconn():
-                conn = connector.connect(
-                    instance_connection_name,
-                    "pg8000",
-                    user=db_user,
-                    password=db_pass,
-                    db=db_name,
-                )
-                return conn
-
-            # SQLAlchemy engine for Cloud SQL
-            engine = create_engine(
-                "postgresql+pg8000://",
-                creator=getconn,
-                echo=True,
-            )
-            return engine
-        except Exception as e:
-            print(f"Failed to connect to Cloud SQL: {e}, falling back to SQLite")
-            db_type = "sqlite"
-
-    # SQLite fallback
-    database_url = settings.get_database_url()
-    if not database_url.startswith('sqlite:'):
-        database_url = 'sqlite:///database.db'
-    return create_engine(database_url, echo=True, connect_args={"check_same_thread": False})
+    # Use PostgreSQL database URL from environment
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return create_engine(database_url, echo=True)
+    else:
+        # Fallback to SQLite for development
+        print("DATABASE_URL not set, falling back to SQLite")
+        return create_engine("sqlite:///database.db", echo=True, connect_args={"check_same_thread": False})
 
 # Initialize engine based on configuration
 engine = get_database_url()
