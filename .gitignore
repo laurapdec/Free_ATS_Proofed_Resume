@@ -106,6 +106,26 @@ temp/
 
 # Keep lockfiles committed (package-lock.json / yarn.lock) unless you intentionally want to ignore them
 
-### Security note
-# Never commit secrets. Use .env.example files for placeholders and store real secrets in your deployment provider (Vercel / Render / GitHub Secrets / Supabase/Neon).
+### Security / Secrets (CRITICAL - Never commit real secrets)
+# Google Cloud service account keys
+backend/config/*.json
+*.json
+
+# Environment files with real secrets
+backend/.env.production
+backend/.env.production.local
+.env.production
+.env.production.local
+
+# All .env files (except examples)
 .env
+.env.local
+.env.development
+.env.test
+!*.env.example
+
+# API keys, tokens, secrets
+*_SECRET*
+*_KEY*
+*_TOKEN*
+*API_KEY*
