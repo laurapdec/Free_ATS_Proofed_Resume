@@ -12,6 +12,7 @@ import type { Resume } from '../types/resume';
 import { isValidResume } from '../utils/validation';
 import { generatePDF } from '../utils/api';
 import { Header } from './Header';
+import ReactMarkdown from 'react-markdown';
 
 interface MainLayoutProps {
   children?: React.ReactNode;
@@ -1778,16 +1779,76 @@ I can then tailor your resume and generate customized application materials!`;
                           borderTop: `8px solid ${message.role === 'assistant' ? colors.blueHighlight : colors.blueSecondary}`,
                         }}
                       >
-                        <Text
-                          color={message.role === 'assistant'
-                            ? colors.blueText
-                            : 'white'}
-                          fontSize="sm"
-                          lineHeight="1.4"
-                          whiteSpace="pre-wrap"
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <Text
+                                color={message.role === 'assistant'
+                                  ? colors.blueText
+                                  : 'white'}
+                                fontSize="sm"
+                                lineHeight="1.4"
+                                mb={2}
+                              >
+                                {children}
+                              </Text>
+                            ),
+                            strong: ({ children }) => (
+                              <Text as="strong" fontWeight="bold">
+                                {children}
+                              </Text>
+                            ),
+                            em: ({ children }) => (
+                              <Text as="em" fontStyle="italic">
+                                {children}
+                              </Text>
+                            ),
+                            ul: ({ children }) => (
+                              <VStack align="start" spacing={1} pl={4} mb={2}>
+                                {children}
+                              </VStack>
+                            ),
+                            ol: ({ children }) => (
+                              <VStack align="start" spacing={1} pl={4} mb={2} as="ol">
+                                {children}
+                              </VStack>
+                            ),
+                            li: ({ children }) => (
+                              <Text fontSize="sm" lineHeight="1.4" color={message.role === 'assistant' ? colors.blueText : 'white'}>
+                                • {children}
+                              </Text>
+                            ),
+                            h1: ({ children }) => (
+                              <Text fontSize="lg" fontWeight="bold" mb={2} color={message.role === 'assistant' ? colors.blueText : 'white'}>
+                                {children}
+                              </Text>
+                            ),
+                            h2: ({ children }) => (
+                              <Text fontSize="md" fontWeight="bold" mb={2} color={message.role === 'assistant' ? colors.blueText : 'white'}>
+                                {children}
+                              </Text>
+                            ),
+                            h3: ({ children }) => (
+                              <Text fontSize="sm" fontWeight="bold" mb={1} color={message.role === 'assistant' ? colors.blueText : 'white'}>
+                                {children}
+                              </Text>
+                            ),
+                            code: ({ children }) => (
+                              <Text as="code" bg="gray.100" px={1} py={0.5} borderRadius="sm" fontSize="xs" color="gray.800">
+                                {children}
+                              </Text>
+                            ),
+                            pre: ({ children }) => (
+                              <Box bg="gray.100" p={2} borderRadius="md" mb={2} overflowX="auto">
+                                <Text fontSize="xs" color="gray.800" fontFamily="mono">
+                                  {children}
+                                </Text>
+                              </Box>
+                            ),
+                          }}
                         >
                           {message.content}
-                        </Text>
+                        </ReactMarkdown>
                       </Box>
                     </Flex>
                   ))}
