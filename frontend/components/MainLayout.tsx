@@ -1779,9 +1779,9 @@ I can then tailor your resume and generate customized application materials!`;
                           borderTop: `8px solid ${message.role === 'assistant' ? colors.blueHighlight : colors.blueSecondary}`,
                         }}
                       >
-                        {ReactMarkdown({
-                          children: message.content,
-                          components: {
+                        <ReactMarkdown
+                          children={message.content}
+                          components={{
                             p: ({ children }) => (
                               <Text
                                 color={message.role === 'assistant'
@@ -1827,8 +1827,8 @@ I can then tailor your resume and generate customized application materials!`;
                             hr: () => (
                               <Divider my={3} />
                             ),
-                          }
-                        })}
+                          }}
+                        />
                       </Box>
                     </Flex>
                   ))}
