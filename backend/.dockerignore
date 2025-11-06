@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+.env.*
+!.env.production
+database.db
+*.db
+.vercel
+.DS_Store
+node_modules
+frontend/
