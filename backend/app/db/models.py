@@ -20,33 +20,39 @@ def get_database_url():
         db_name = os.getenv("DB_NAME")
 
         if not all([instance_connection_name, db_user, db_pass, db_name]):
-            raise ValueError("Missing required Cloud SQL environment variables")
+            print("Missing Cloud SQL environment variables, falling back to SQLite")
+            db_type = "sqlite"
 
-        connector = Connector()
+    if db_type == "cloudsql":
+        try:
+            connector = Connector()
 
-        def getconn():
-            conn = connector.connect(
-                instance_connection_name,
-                "pg8000",
-                user=db_user,
-                password=db_pass,
-                db=db_name,
+            def getconn():
+                conn = connector.connect(
+                    instance_connection_name,
+                    "pg8000",
+                    user=db_user,
+                    password=db_pass,
+                    db=db_name,
+                )
+                return conn
+
+            # SQLAlchemy engine for Cloud SQL
+            engine = create_engine(
+                "postgresql+pg8000://",
+                creator=getconn,
+                echo=True,
             )
-            return conn
+            return engine
+        except Exception as e:
+            print(f"Failed to connect to Cloud SQL: {e}, falling back to SQLite")
+            db_type = "sqlite"
 
-        # SQLAlchemy engine for Cloud SQL
-        engine = create_engine(
-            "postgresql+pg8000://",
-            creator=getconn,
-            echo=True,
-        )
-        return engine
-    else:
-        # SQLite fallback for development
-        database_url = settings.get_database_url()
-        if not database_url.startswith('sqlite:'):
-            database_url = 'sqlite:///database.db'
-        return create_engine(database_url, echo=True, connect_args={"check_same_thread": False})
+    # SQLite fallback
+    database_url = settings.get_database_url()
+    if not database_url.startswith('sqlite:'):
+        database_url = 'sqlite:///database.db'
+    return create_engine(database_url, echo=True, connect_args={"check_same_thread": False})
 
 # Initialize engine based on configuration
 engine = get_database_url()
@@ -134,12 +140,22 @@ class ChatSession(SQLModel, table=True):
 
 def init_db():
     """Initialize database and create all tables"""
-    SQLModel.metadata.create_all(engine)
+    try:
+        SQLModel.metadata.create_all(engine)
+        print("Database tables created successfully")
+    except Exception as e:
+        print(f"Failed to create database tables: {e}")
+        # Don't raise exception, just log it
+        pass
 
 def get_session():
     """Get database session"""
-    with Session(engine) as session:
-        yield session
+    try:
+        with Session(engine) as session:
+            yield session
+    except Exception as e:
+        print(f"Database session error: {e}")
+        raise
 
 def migrate_from_sqlite_to_cloudsql():
     """

@@ -129,56 +129,62 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 @router.post("/register", response_model=dict)
 async def register(user_data: UserCreate, session: Session = Depends(get_session)):
-    # Check if user already exists
-    existing_user = session.exec(select(User).where(User.email == user_data.email)).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    try:
+        # Check if user already exists
+        existing_user = session.exec(select(User).where(User.email == user_data.email)).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create new user
-    hashed_password = get_password_hash(user_data.password)
+        # Create new user
+        hashed_password = get_password_hash(user_data.password)
 
-    user = User(
-        email=user_data.email,
-        first_name=user_data.firstName,
-        last_name=user_data.lastName,
-        password_hash=hashed_password,
-        subscription_plan="free",
-        subscription_status="active",
-        resumes_used=0,
-        resumes_limit=5,
-        email_notifications=True,
-        job_alerts=True,
-        weekly_reports=False
-    )
+        user = User(
+            email=user_data.email,
+            first_name=user_data.firstName,
+            last_name=user_data.lastName,
+            password_hash=hashed_password,
+            subscription_plan="free",
+            subscription_status="active",
+            resumes_used=0,
+            resumes_limit=5,
+            email_notifications=True,
+            job_alerts=True,
+            weekly_reports=False
+        )
 
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+        session.add(user)
+        session.commit()
+        session.refresh(user)
 
-    # Create access token
-    access_token = create_access_token(data={"sub": str(user.id)})
+        # Create access token
+        access_token = create_access_token(data={"sub": str(user.id)})
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": str(user.id),
-            "email": user.email,
-            "firstName": user.first_name,
-            "lastName": user.last_name,
-            "subscription": {
-                "plan": user.subscription_plan,
-                "status": user.subscription_status,
-                "resumesUsed": user.resumes_used,
-                "resumesLimit": user.resumes_limit
-            },
-            "preferences": {
-                "emailNotifications": user.email_notifications,
-                "jobAlerts": user.job_alerts,
-                "weeklyReports": user.weekly_reports
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+                "subscription": {
+                    "plan": user.subscription_plan,
+                    "status": user.subscription_status,
+                    "resumesUsed": user.resumes_used,
+                    "resumesLimit": user.resumes_limit
+                },
+                "preferences": {
+                    "emailNotifications": user.email_notifications,
+                    "jobAlerts": user.job_alerts,
+                    "weeklyReports": user.weekly_reports
+                }
             }
         }
-    }
+    except Exception as e:
+        print(f"Registration error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 @router.post("/login", response_model=dict)
 async def login(user_data: UserLogin, session: Session = Depends(get_session)):
