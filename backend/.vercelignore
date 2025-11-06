@@ -1,0 +1,6 @@
+frontend/
+.git
+README.md
+*.md
+.env.example
+node_modules/
